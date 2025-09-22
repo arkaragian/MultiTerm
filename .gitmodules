@@ -1,0 +1,3 @@
+[submodule "libCommunication"]
+	path = libCommunication
+	url = https://github.com/arkaragian/libCommunication.git
