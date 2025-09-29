@@ -1,11 +1,23 @@
 ﻿using libCommunication.Configuration;
 using MultiTermCLI.Configuration;
 using System.IO.Ports;
-using MuliTermCLI.Tui;
 using Terminal.Gui;
+using MultiTermCLI.Tui;
+
+namespace MultiTermCLI;
 
 public class Program {
     public static int Main(string[] args) {
+
+        if (!ConsoleVT.IsVtEnabled()) {
+            if (!ConsoleVT.TryEnableVt()) {
+                Console.WriteLine("No VT Support! Exiting...");
+                return 0;
+            }
+        }
+
+
+
         TerminalSettings settings = new() {
             Terminals = [
                 new SerialPortSettings() {
@@ -18,7 +30,6 @@ public class Program {
                         LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
                     }
                 },
-
                 new SerialPortSettings() {
                     PortName = "COM2",
                     BaudRate = 9600,
@@ -28,26 +39,32 @@ public class Program {
                     LogSettings = new() {
                         LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
                     }
-                }
+                },
             ]
         };
 
 
 
+        Application.Init();                         // set raw mode, alt screen, colors
+        try {
+            // optional: make Ctrl+C quit
+            Application.QuitKey = Key.C.WithCtrl;   // maps to Command.Quit
+            // or also wire SIGINT:
 
-        Application.Init();
-        MainTUIWindow mainWindow = new(settings);// {
-            //ColorScheme = new ColorScheme {
-            //    Normal = Application.Driver.MakeAttribute(Color.Green, Color.Black),
-            //    Focus = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black),
-            //    HotNormal = Application.Driver.MakeAttribute(Color.Green, Color.Black),
-            //    HotFocus = Application.Driver.MakeAttribute(Color.BrightGreen, Color.Black)
-            //}
-        //};
+            Console.CancelKeyPress += static (_, e) => {
+                e.Cancel = true;
+                Application.RequestStop();
+            };
 
-        Application.Top.Add(mainWindow);
-        Application.Run();
-        Application.Shutdown();
+            Toplevel top = new();
+            _ = top.Add(new MainTUIWindow(/*settings*/));
+            Application.Run(top);
+            top.Dispose();
+        } finally {
+            Application.Shutdown();                 // restore terminal
+        }
+
+
 
         return 0;
     }

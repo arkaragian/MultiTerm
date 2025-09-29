@@ -3,7 +3,7 @@ using libCommunication.Configuration;
 using libCommunication.Foundation;
 using Terminal.Gui;
 
-namespace MuliTermCLI.Tui;
+namespace MultiTermCLI.Tui;
 
 public class TerminalPanel : TextView {
 
@@ -13,7 +13,17 @@ public class TerminalPanel : TextView {
         _settings = settings;
 
         Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits);
-        SerialReadThread srt = new();
+
+        ProtocolDescription desc = new() {
+            StandardHeaderLength = -1,
+            EOLByte = null,
+            EOLByteSequence = null,
+            SupportsMultiplexing = false,
+            BisectingLogic = static a => { return [a]; }
+        };
+
+
+        SerialReadThread srt = new(_settings.PortName, port, desc);
         //SerialWriteTread swt = new();
     }
 }

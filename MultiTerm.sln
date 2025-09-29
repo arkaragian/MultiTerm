@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiTermCLI", "MultiTermCL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libMultiTerm", "libMultiTerm\libMultiTerm.csproj", "{2FF74D7C-6D42-4288-91D4-C310553B8D58}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libCommunication", "libCommunication", "{09202D77-A2A8-864F-C340-BB46F98EF7CF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libCommunication", "libCommunication\libCommunication\libCommunication.csproj", "{1C35834A-2E16-43D0-8FEF-F0BC0BC68F92}"
 EndProject
 Global
@@ -60,8 +58,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{1C35834A-2E16-43D0-8FEF-F0BC0BC68F92} = {09202D77-A2A8-864F-C340-BB46F98EF7CF}
 	EndGlobalSection
 EndGlobal
