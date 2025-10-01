@@ -1,6 +1,6 @@
-using Terminal.Gui;
-using MultiTermCLI.Configuration;
 using libCommunication.Configuration;
+using MultiTermCLI.Configuration;
+using Terminal.Gui;
 
 namespace MultiTermCLI.Tui;
 
@@ -22,8 +22,8 @@ public class MainTUIWindow : Window {
         };
 
         int count = settings.Terminals.Count;
-        int cols = Math.Min(2, Math.Max(1, count >= 2 ? 2 : 1));
-        int rows = (int)Math.Ceiling((double)count / cols);
+
+        (int rows, int cols, bool threeLayout) = DecideLayout(count);
 
         int index = 0;
         for (int r = 0; r < rows; r++) {
@@ -45,13 +45,65 @@ public class MainTUIWindow : Window {
                     Height = Dim.Fill()
                 };
 
-                _ = frame.Add(panel);
+                _ = frame.Add(panel.View);
                 _ = Add(frame);
 
                 _terminals.Add(t.PortName, panel);
             }
         }
 
+    }
+
+    public static (int rows, int columns, bool threeLayout) DecideLayout(int count) {
+
+        bool threeLayout = false;
+        int rows = 0;
+        int cols = 0;
+
+        if (count <= 0) {
+            return (rows, cols, threeLayout);
+        }
+
+        if (count == 1) {
+            rows = 1;
+            cols = 1;
+            return (rows, cols, threeLayout);
+        }
+
+        if (count == 2) { // upper and lower halves
+            rows = 2;
+            cols = 1;
+            return (rows, cols, threeLayout);
+        }
+
+        if (count == 3) { // top full width, bottom two columns
+            rows = 2;
+            cols = 2;
+            threeLayout = true;
+            return (rows, cols, threeLayout);
+        }
+
+        if (count == 4) { // 2x2 quadrants
+            rows = 2;
+            cols = 2;
+            return (rows, cols, threeLayout);
+        }
+
+        // >=5: near-square grid, capped to reasonable columns
+        int maxCols = 4; // tune to taste for your terminal width
+        cols = Math.Min(maxCols, (int)Math.Ceiling(Math.Sqrt(count)));
+        rows = (int)Math.Ceiling((double)count / cols);
+        return (rows, cols, threeLayout);
+    }
+
+    protected override void Dispose(bool disposing) {
+        if (disposing) {
+            foreach (KeyValuePair<string, TerminalPanel> a in _terminals) {
+                a.Value.Dispose();
+            }
+        }
+
+        base.Dispose(disposing);
     }
 
 }
