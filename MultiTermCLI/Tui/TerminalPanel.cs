@@ -8,49 +8,78 @@ namespace MultiTermCLI.Tui;
 
 public sealed class TerminalPanel : IDisposable {
 
-
     private readonly SerialPortSettings _settings;
-
     private readonly CancellationTokenSource _cts;
     private readonly SerialReadThread _srt;
     private readonly Thread _terminalLoop;
 
     private bool _disposed;
 
-    private readonly TextView _view;
+    private FrameView _frame;
+    public FrameView Frame => _frame;
+
+    private TextView _view;
     public TextView View => _view;
 
+    private TextField _input;
+    public TextField Input => _input;
+
     public Pos X {
-        get => _view.X;
-        set => _view.X = value;
+        get => _frame.X;
+        set => _frame.X = value;
     }
 
     public Pos Y {
-        get => _view.Y;
-        set => _view.Y = value;
+        get => _frame.Y;
+        set => _frame.Y = value;
     }
 
     public Dim? Width {
-        get => _view.Width;
-        set => _view.Width = value;
+        get => _frame.Width;
+        set => _frame.Width = value;
     }
 
     public Dim? Height {
-        get => _view.Height;
-        set => _view.Height = value;
+        get => _frame.Height;
+        set => _frame.Height = value;
     }
 
     public TerminalPanel(SerialPortSettings settings) {
         _settings = settings;
 
 
+        _frame = new FrameView() {
+            Title = "Terminal",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
         _view = new TextView() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Height = Dim.Fill(5),
             ReadOnly = true
         };
+
+
+        _input = new TextField() {
+            Title = "Input",
+            X = 0,
+            Y = Pos.Bottom(_view),
+            Width = Dim.Fill(),
+            Height = 3,
+            BorderStyle = LineStyle.Single
+        };
+
+
+
+        _input.KeyDown += OnInputKeyPress;
+
+        _frame.Add(_view);
+        _frame.Add(_input);
 
         Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits) {
             ReadTimeout = 200
@@ -99,6 +128,31 @@ public sealed class TerminalPanel : IDisposable {
             }
 
         }
+    }
+
+    private void OnInputKeyPress(object? sender, Key e) {
+        if (e.KeyCode != Key.Enter) {
+            return;
+        }
+
+        string text = _input.Text?.ToString() ?? string.Empty;
+
+        // try {
+        //     if (text.Length > 0) {
+        //         lock (_writeLock) {
+        //             _port.Write(text);
+        //             _port.Write(_port.NewLine);
+        //         }
+        //     }
+        // } catch (Exception ex) {
+        //     Application.Invoke(() => {
+        //         _view.Text += $"[TX ERROR] {ex.Message}{Environment.NewLine}";
+        //         _view.MoveEnd();
+        //     });
+        // }
+
+        _input.Text = string.Empty;
+        e.Handled = true;
     }
 
 
