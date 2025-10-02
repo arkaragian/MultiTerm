@@ -30,23 +30,42 @@ public class MainTUIWindow : Window {
             for (int c = 0; c < cols && index < count; c++, index++) {
                 SerialPortSettings t = settings.Terminals[index];
 
-                FrameView frame = new() {
-                    Title = t.PortName,
+                // FrameView frame = new() {
+                //     Title = t.PortName,
+                //     X = c == 0 ? 0 : Pos.Percent(50),
+                //     Y = r == 0 ? 0 : Pos.Percent(50),
+                //     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
+                //     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50)
+                // };
+                //
+                // TerminalPanel panel = new(t) {
+                //     X = 0,
+                //     Y = 0,
+                //     Width = Dim.Fill(),
+                //     Height = Dim.Fill()
+                // };
+                //
+                // _ = frame.Add(panel.Frame);
+                // _ = Add(frame);
+
+                // FrameView frame = new() {
+                //     Title = t.PortName,
+                //     X = c == 0 ? 0 : Pos.Percent(50),
+                //     Y = r == 0 ? 0 : Pos.Percent(50),
+                //     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
+                //     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50)
+                // };
+
+                TerminalPanel panel = new(t) {
+                    //Title = t.PortName,
                     X = c == 0 ? 0 : Pos.Percent(50),
                     Y = r == 0 ? 0 : Pos.Percent(50),
                     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
                     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50)
                 };
 
-                TerminalPanel panel = new(t) {
-                    X = 0,
-                    Y = 0,
-                    Width = Dim.Fill(),
-                    Height = Dim.Fill()
-                };
-
-                _ = frame.Add(panel.View);
-                _ = Add(frame);
+                //_ = frame.Add(panel.Frame);
+                _ = Add(panel.Frame);
 
                 _terminals.Add(t.PortName, panel);
             }

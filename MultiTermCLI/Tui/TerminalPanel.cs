@@ -15,14 +15,19 @@ public sealed class TerminalPanel : IDisposable {
 
     private bool _disposed;
 
-    private FrameView _frame;
-    public FrameView Frame => _frame;
+    private View _frame;
+    public View Frame => _frame;
 
     private TextView _view;
     public TextView View => _view;
 
+    private FrameView _input_frame;
+    public FrameView InputFrame => _input_frame;
+
     private TextField _input;
     public TextField Input => _input;
+
+    private readonly Lock _writeLock;
 
     public Pos X {
         get => _frame.X;
@@ -46,10 +51,10 @@ public sealed class TerminalPanel : IDisposable {
 
     public TerminalPanel(SerialPortSettings settings) {
         _settings = settings;
+        _writeLock = new();
 
 
-        _frame = new FrameView() {
-            Title = "Terminal",
+        _frame = new View() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -57,29 +62,28 @@ public sealed class TerminalPanel : IDisposable {
         };
 
         _view = new TextView() {
+            Title = settings.PortName,
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(5),
-            ReadOnly = true
+            Height = Dim.Fill(margin: 3),
+            ReadOnly = true,
+            BorderStyle = LineStyle.Single
         };
-
 
         _input = new TextField() {
             Title = "Input",
             X = 0,
-            Y = Pos.Bottom(_view),
+            Y = Pos.AnchorEnd(3),
             Width = Dim.Fill(),
             Height = 3,
             BorderStyle = LineStyle.Single
         };
 
 
-
-        _input.KeyDown += OnInputKeyPress;
-
         _frame.Add(_view);
         _frame.Add(_input);
+
 
         Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits) {
             ReadTimeout = 200
@@ -106,6 +110,9 @@ public sealed class TerminalPanel : IDisposable {
 
         _terminalLoop = new Thread(() => TerminalLoopLogic(_cts.Token));
         _terminalLoop.Start();
+
+        // Ensure the input is ready to type into.
+        Application.Invoke(() => _input.SetFocus());
     }
 
     private void TerminalLoopLogic(CancellationToken ct) {
@@ -128,31 +135,6 @@ public sealed class TerminalPanel : IDisposable {
             }
 
         }
-    }
-
-    private void OnInputKeyPress(object? sender, Key e) {
-        if (e.KeyCode != Key.Enter) {
-            return;
-        }
-
-        string text = _input.Text?.ToString() ?? string.Empty;
-
-        // try {
-        //     if (text.Length > 0) {
-        //         lock (_writeLock) {
-        //             _port.Write(text);
-        //             _port.Write(_port.NewLine);
-        //         }
-        //     }
-        // } catch (Exception ex) {
-        //     Application.Invoke(() => {
-        //         _view.Text += $"[TX ERROR] {ex.Message}{Environment.NewLine}";
-        //         _view.MoveEnd();
-        //     });
-        // }
-
-        _input.Text = string.Empty;
-        e.Handled = true;
     }
 
 
