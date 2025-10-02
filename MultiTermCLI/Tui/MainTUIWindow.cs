@@ -18,7 +18,8 @@ public class MainTUIWindow : Window {
             Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
             Focus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
             HotNormal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
-            HotFocus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black)
+            HotFocus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
+            Disabled = new Terminal.Gui.Attribute(Color.Green, Color.Gray)
         };
 
         int count = settings.Terminals.Count;

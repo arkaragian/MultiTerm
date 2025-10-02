@@ -21,9 +21,6 @@ public sealed class TerminalPanel : IDisposable {
     private TextView _view;
     public TextView View => _view;
 
-    private FrameView _input_frame;
-    public FrameView InputFrame => _input_frame;
-
     private TextField _input;
     public TextField Input => _input;
 
@@ -53,6 +50,8 @@ public sealed class TerminalPanel : IDisposable {
         _settings = settings;
         _writeLock = new();
 
+        int _input_height = 3;
+
 
         _frame = new View() {
             X = 0,
@@ -66,7 +65,7 @@ public sealed class TerminalPanel : IDisposable {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(margin: 3),
+            Height = Dim.Fill(margin: _input_height),
             ReadOnly = true,
             BorderStyle = LineStyle.Single
         };
@@ -74,10 +73,12 @@ public sealed class TerminalPanel : IDisposable {
         _input = new TextField() {
             Title = "Input",
             X = 0,
-            Y = Pos.AnchorEnd(3),
+            Y = Pos.AnchorEnd(_input_height),
             Width = Dim.Fill(),
-            Height = 3,
-            BorderStyle = LineStyle.Single
+            Height = _input_height,
+            BorderStyle = LineStyle.Single,
+            ReadOnly = false,
+            CanFocus = true
         };
 
 
