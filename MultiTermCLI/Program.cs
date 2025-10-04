@@ -9,13 +9,13 @@ namespace MultiTermCLI;
 public class Program {
     public static int Main(string[] args) {
 
-        if (!ConsoleVT.IsVtEnabled()) {
-            Console.WriteLine("No Virtual Terminal Processing. Enabling virtual terminal");
-            if (!ConsoleVT.TryEnableVt()) {
-                Console.WriteLine("No VT Support! Exiting...");
-                return 0;
-            }
-        }
+        // if (!ConsoleVT.IsVtEnabled()) {
+        //     Console.WriteLine("No Virtual Terminal Processing. Enabling virtual terminal");
+        //     if (!ConsoleVT.TryEnableVt()) {
+        //         Console.WriteLine("No VT Support! Exiting...");
+        //         return 0;
+        //     }
+        // }
 
 
 
@@ -71,7 +71,7 @@ public class Program {
             top.Dispose();
         } finally {
             Application.Shutdown();                 // restore terminal
-            ConsoleVT.Restore();
+            //ConsoleVT.Restore();
             // Safety reset for alt screen, attributes, and cursor visibility.
         }
 

@@ -57,7 +57,8 @@ public sealed class TerminalPanel : IDisposable {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill()
+            Height = Dim.Fill(),
+            CanFocus = true
         };
 
         _view = new TextView() {
@@ -67,7 +68,8 @@ public sealed class TerminalPanel : IDisposable {
             Width = Dim.Fill(),
             Height = Dim.Fill(margin: _input_height),
             ReadOnly = true,
-            BorderStyle = LineStyle.Single
+            BorderStyle = LineStyle.Single,
+            CanFocus = false,
         };
 
         _input = new TextField() {
