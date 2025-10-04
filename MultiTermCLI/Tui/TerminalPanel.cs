@@ -138,6 +138,7 @@ public sealed class TerminalPanel : IDisposable {
             }
 
         }
+        _srt.Stop();
     }
 
 
