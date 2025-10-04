@@ -10,6 +10,7 @@ public class Program {
     public static int Main(string[] args) {
 
         if (!ConsoleVT.IsVtEnabled()) {
+            Console.WriteLine("No Virtual Terminal Processing. Enabling virtual terminal");
             if (!ConsoleVT.TryEnableVt()) {
                 Console.WriteLine("No VT Support! Exiting...");
                 return 0;

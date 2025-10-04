@@ -30,9 +30,11 @@ internal static class ConsoleVT {
         }
         _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         if (_hOut == IntPtr.Zero || _hOut == new IntPtr(-1)) {
+            Console.WriteLine("Could not retreive the stdout handle");
             return false;
         }
         if (!GetConsoleMode(_hOut, out uint mode)) {
+            Console.WriteLine("Could not stdout console mode");
             return false;
         }
         return (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0;
@@ -47,21 +49,30 @@ internal static class ConsoleVT {
         _hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
         if (_hOut == IntPtr.Zero || _hOut == new IntPtr(-1)) {
+            Console.WriteLine("Could not retreive the stdout handle");
             return false;
         }
         if (!GetConsoleMode(_hOut, out _outModeOrig)) {
+            Console.WriteLine("Could not stdout console mode");
             return false; // ERROR_INVALID_HANDLE on MSYS2 pty
         }
         //uint newOutMode = outMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
         uint newOutMode = _outModeOrig | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         if (!SetConsoleMode(_hOut, newOutMode)) {
+            Console.WriteLine("Could not enable Virtual Terminal Processing");
             return false;
         }
 
         // Optional: enable VT input (for CSI key sequences)
         _hIn = GetStdHandle(STD_INPUT_HANDLE);
-        if (_hIn != IntPtr.Zero && _hIn != new IntPtr(-1) && GetConsoleMode(_hIn, out _inModeOrig)) {
-            SetConsoleMode(_hIn, _inModeOrig | ENABLE_VIRTUAL_TERMINAL_INPUT);
+        if (_hIn != IntPtr.Zero && _hIn != new IntPtr(-1)) {
+            bool ok = GetConsoleMode(_hIn, out _inModeOrig);
+            if (ok) {
+                ok = SetConsoleMode(_hIn, _inModeOrig | ENABLE_VIRTUAL_TERMINAL_INPUT);
+                if (!ok) {
+                    Console.WriteLine("Could not set Virtual Terminal Support for stdin");
+                }
+            }
             //do not modify input
         }
 
@@ -72,11 +83,21 @@ internal static class ConsoleVT {
 
     public static void Restore() {
         if (!OperatingSystem.IsWindows() || !_captured) { return; }
+
+        Console.WriteLine("Restoring Terminal");
+
         if (_hOut != IntPtr.Zero && _hOut != new IntPtr(-1)) {
-            SetConsoleMode(_hOut, _outModeOrig);
+            bool ok = SetConsoleMode(_hOut, _outModeOrig);
+            if (!ok) {
+                Console.WriteLine("Could not restore stdout console mode");
+            }
         }
         if (_hIn != IntPtr.Zero && _hIn != new IntPtr(-1)) {
-            SetConsoleMode(_hIn, _inModeOrig);
+            bool ok = SetConsoleMode(_hIn, _inModeOrig);
+            if (!ok) {
+                Console.WriteLine("Could not restore stdin console mode");
+            }
         }
+        Console.WriteLine("Terminal Restored");
     }
 }
