@@ -85,6 +85,7 @@ internal static class ConsoleVT {
         if (!OperatingSystem.IsWindows() || !_captured) { return; }
 
         Console.WriteLine("Restoring Terminal");
+        Console.Write("\u001b[?1049l\u001b[0m\u001b[?25h\r\n");
 
         if (_hOut != IntPtr.Zero && _hOut != new IntPtr(-1)) {
             bool ok = SetConsoleMode(_hOut, _outModeOrig);

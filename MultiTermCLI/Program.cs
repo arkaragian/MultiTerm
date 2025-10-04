@@ -73,7 +73,6 @@ public class Program {
             Application.Shutdown();                 // restore terminal
             ConsoleVT.Restore();
             // Safety reset for alt screen, attributes, and cursor visibility.
-            Console.Write("\u001b[?1049l\u001b[0m\u001b[?25h\r\n");
         }
 
 
