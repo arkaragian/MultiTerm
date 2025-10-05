@@ -26,6 +26,8 @@ public sealed class TerminalPanel : IDisposable {
     private TextField _input;
     public TextField Input => _input;
 
+    private TerminalInputLine _input2;
+
     private readonly Lock _writeLock;
 
     public Pos X {
@@ -92,6 +94,21 @@ public sealed class TerminalPanel : IDisposable {
             }
         };
 
+        _input2 = new TerminalInputLine() {
+            Title = "Input",
+            X = 0,
+            Y = Pos.AnchorEnd(_input_height),
+            Width = Dim.Fill(),
+            Height = _input_height,
+            BorderStyle = LineStyle.Single,
+            // ReadOnly = false,
+            // CanFocus = true,
+            ColorScheme = new ColorScheme() {
+                Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),      // Text = white, background = black
+                Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),       // Same text colors when focused
+            }
+        };
+
         // Hook into drawing events to change border color dynamically
         // _input.DrawContent += (e) => {
         //     var borderColor = _input.HasFocus ? Color.BrightYellow : Color.BrightGreen;
@@ -99,24 +116,11 @@ public sealed class TerminalPanel : IDisposable {
         // };
 
 
-        _input.KeyDown += (object sender, Key e) => {
-            if (e == Key.Enter) {
-                string text = _input.Text.ToString();
-
-                // handle the completed input here
-                _input.Text = "";
-
-                libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
-                _swt.Addtoqueue(cmd, handle: null, CancellationToken.None);
-
-                // optional: suppress default behavior
-                e.Handled = true;
-            }
-        };
 
 
         _frame.Add(_view);
-        _frame.Add(_input);
+        //_frame.Add(_input);
+        _frame.Add(_input2.View);
 
 
         Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits) {
@@ -145,6 +149,22 @@ public sealed class TerminalPanel : IDisposable {
         if (r.Result is not null) {
             throw r.Result;
         }
+
+
+        _input2.KeyDown += (object? sender, Key e) => {
+            if (e == Key.Enter) {
+                string text = _input2.Text.ToString();
+
+                // handle the completed input here
+                _input2.Text = "";
+
+                libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
+                _swt.Addtoqueue(cmd, handle: null, CancellationToken.None);
+
+                // optional: suppress default behavior
+                e.Handled = true;
+            }
+        };
 
         _cts = new();
 
