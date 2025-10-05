@@ -3,6 +3,7 @@ using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
 using Terminal.Gui;
+using System.Text;
 
 namespace MultiTermCLI.Tui;
 
@@ -11,6 +12,7 @@ public sealed class TerminalPanel : IDisposable {
     private readonly SerialPortSettings _settings;
     private readonly CancellationTokenSource _cts;
     private readonly SerialReadThread _srt;
+    private readonly SerialWriteThread _swt;
     private readonly Thread _terminalLoop;
 
     private bool _disposed;
@@ -80,7 +82,36 @@ public sealed class TerminalPanel : IDisposable {
             Height = _input_height,
             BorderStyle = LineStyle.Single,
             ReadOnly = false,
-            CanFocus = true
+            CanFocus = true,
+            ColorScheme = new ColorScheme() {
+                Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),      // Text = white, background = black
+                Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),       // Same text colors when focused
+                // HotNormal = new Terminal.Gui.Attribute(Color.White, Color.Black),
+                // HotFocus = new Terminal.Gui.Attribute(Color.White, Color.Black),
+                // Disabled = new Terminal.Gui.Attribute(Color.Gray, Color.Black)
+            }
+        };
+
+        // Hook into drawing events to change border color dynamically
+        // _input.DrawContent += (e) => {
+        //     var borderColor = _input.HasFocus ? Color.BrightYellow : Color.BrightGreen;
+        //     _input.Border.BorderBrush = borderColor;
+        // };
+
+
+        _input.KeyDown += (object sender, Key e) => {
+            if (e == Key.Enter) {
+                string text = _input.Text.ToString();
+
+                // handle the completed input here
+                _input.Text = "";
+
+                libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
+                _swt.Addtoqueue(cmd, handle: null, CancellationToken.None);
+
+                // optional: suppress default behavior
+                e.Handled = true;
+            }
         };
 
 
@@ -103,8 +134,14 @@ public sealed class TerminalPanel : IDisposable {
         };
 
 
-        _srt = new(_settings.PortName, port, desc);
+        _srt = new SerialReadThread(_settings.PortName, port, desc);
         Task<Exception?> r = _srt.Start();
+        if (r.Result is not null) {
+            throw r.Result;
+        }
+
+        _swt = new SerialWriteThread(_settings.PortName, port, desc);
+        r = _swt.Start();
         if (r.Result is not null) {
             throw r.Result;
         }
@@ -149,6 +186,7 @@ public sealed class TerminalPanel : IDisposable {
 
         _disposed = true;
         _cts.Cancel();
+        _swt.Stop();
         _terminalLoop.Join();
         _cts.Dispose();
         _view.Dispose();

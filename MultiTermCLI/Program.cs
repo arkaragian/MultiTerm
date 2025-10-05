@@ -31,16 +31,16 @@ public class Program {
                         LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
                     }
                 },
-                // new SerialPortSettings() {
-                //     PortName = "COM21",
-                //     BaudRate = 9600,
-                //     Parity = Parity.None,
-                //     DataBits = 8,
-                //     StopBits = StopBits.One,
-                //     LogSettings = new() {
-                //         LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
-                //     }
-                // }
+                new SerialPortSettings() {
+                    PortName = "COM2",
+                    BaudRate = 9600,
+                    Parity = Parity.None,
+                    DataBits = 8,
+                    StopBits = StopBits.One,
+                    LogSettings = new() {
+                        LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
+                    }
+                }
             ]
         };
 
