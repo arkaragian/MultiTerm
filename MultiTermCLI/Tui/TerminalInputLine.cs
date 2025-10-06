@@ -65,6 +65,11 @@ public sealed class TerminalInputLine : IDisposable {
         set => _root.ColorScheme = value;
     }
 
+    public TabBehavior? TabStop {
+        get => _root.TabStop;
+        set => _root.TabStop = value;
+    }
+
     //public event Action<Key>? KeyDown;
     public event EventHandler<Key>? KeyDown;
 
@@ -74,7 +79,7 @@ public sealed class TerminalInputLine : IDisposable {
             Y = 0,
             Width = Dim.Fill(),
             Height = 1,
-            CanFocus = true
+            CanFocus = true,
         };
 
         _input = new TextField() {
@@ -83,19 +88,22 @@ public sealed class TerminalInputLine : IDisposable {
             Width = Dim.Fill(18), // reserve room for " CR  LF "
             Height = 1,
             ReadOnly = false,
-            CanFocus = true
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
         };
 
         _sendCR = new CheckBox() {
             Text = "CR",
             X = Pos.Right(_input) + 1,
-            Y = 0
+            Y = 0,
+            TabStop = TabBehavior.TabStop
         };
 
         _sendLF = new CheckBox() {
             Text = "LF",
             X = Pos.Right(_sendCR) + 2,
-            Y = 0
+            Y = 0,
+            TabStop = TabBehavior.TabStop
         };
 
         _root.Add(_input);
@@ -106,6 +114,13 @@ public sealed class TerminalInputLine : IDisposable {
         _input.KeyDown += (object? sender, Key e) => {
             KeyDown?.Invoke(sender, e);
         };
+    }
+
+    public int ApplyTabOrder(int startIndex) {
+        // _input.TabIndex = startIndex++;
+        // _sendCR.TabIndex = startIndex++;
+        // _sendLF.TabIndex = startIndex++;
+        return startIndex;
     }
 
     public string BuildPayload() {

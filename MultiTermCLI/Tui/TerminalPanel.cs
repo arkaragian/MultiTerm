@@ -23,10 +23,7 @@ public sealed class TerminalPanel : IDisposable {
     private TextView _view;
     public TextView View => _view;
 
-    private TextField _input;
-    public TextField Input => _input;
-
-    private TerminalInputLine _input2;
+    private TerminalInputLine _input;
 
     private readonly Lock _writeLock;
 
@@ -50,6 +47,11 @@ public sealed class TerminalPanel : IDisposable {
         set => _frame.Height = value;
     }
 
+    public TabBehavior? TabStop {
+        get => _frame.TabStop;
+        set => _frame.TabStop = value;
+    }
+
     public TerminalPanel(SerialPortSettings settings) {
         _settings = settings;
         _writeLock = new();
@@ -62,7 +64,8 @@ public sealed class TerminalPanel : IDisposable {
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            CanFocus = true
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
         };
 
         _view = new TextView() {
@@ -76,37 +79,18 @@ public sealed class TerminalPanel : IDisposable {
             CanFocus = false,
         };
 
-        _input = new TextField() {
+        _input = new TerminalInputLine() {
             Title = "Input",
             X = 0,
             Y = Pos.AnchorEnd(_input_height),
             Width = Dim.Fill(),
             Height = _input_height,
             BorderStyle = LineStyle.Single,
-            ReadOnly = false,
-            CanFocus = true,
             ColorScheme = new ColorScheme() {
                 Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),      // Text = white, background = black
                 Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),       // Same text colors when focused
-                // HotNormal = new Terminal.Gui.Attribute(Color.White, Color.Black),
-                // HotFocus = new Terminal.Gui.Attribute(Color.White, Color.Black),
-                // Disabled = new Terminal.Gui.Attribute(Color.Gray, Color.Black)
-            }
-        };
-
-        _input2 = new TerminalInputLine() {
-            Title = "Input",
-            X = 0,
-            Y = Pos.AnchorEnd(_input_height),
-            Width = Dim.Fill(),
-            Height = _input_height,
-            BorderStyle = LineStyle.Single,
-            // ReadOnly = false,
-            // CanFocus = true,
-            ColorScheme = new ColorScheme() {
-                Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),      // Text = white, background = black
-                Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),       // Same text colors when focused
-            }
+            },
+            TabStop = TabBehavior.TabStop
         };
 
         // Hook into drawing events to change border color dynamically
@@ -119,8 +103,7 @@ public sealed class TerminalPanel : IDisposable {
 
 
         _frame.Add(_view);
-        //_frame.Add(_input);
-        _frame.Add(_input2.View);
+        _frame.Add(_input.View);
 
 
         Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits) {
@@ -151,12 +134,12 @@ public sealed class TerminalPanel : IDisposable {
         }
 
 
-        _input2.KeyDown += (object? sender, Key e) => {
+        _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
-                string text = _input2.Text.ToString();
+                string text = _input.Text.ToString();
 
                 // handle the completed input here
-                _input2.Text = "";
+                _input.Text = "";
 
                 libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
                 _swt.Addtoqueue(cmd, handle: null, CancellationToken.None);
@@ -172,7 +155,7 @@ public sealed class TerminalPanel : IDisposable {
         _terminalLoop.Start();
 
         // Ensure the input is ready to type into.
-        Application.Invoke(() => _input.SetFocus());
+        Application.Invoke(() => _input.Input.SetFocus());
     }
 
     private void TerminalLoopLogic(CancellationToken ct) {
@@ -196,6 +179,14 @@ public sealed class TerminalPanel : IDisposable {
 
         }
         _srt.Stop();
+    }
+
+    public int ApplyTabOrder(int startIndex) {
+        return _input.ApplyTabOrder(startIndex);
+    }
+
+    public void FocusInput() {
+        Application.Invoke(() => _input.Input.SetFocus());
     }
 
 

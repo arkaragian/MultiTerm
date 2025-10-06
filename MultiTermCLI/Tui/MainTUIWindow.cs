@@ -27,6 +27,8 @@ public class MainTUIWindow : Window {
         (int rows, int cols, bool threeLayout) = DecideLayout(count);
 
         int index = 0;
+        int nextTabIndex = 0;
+        TerminalPanel? firstPanel = null;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols && index < count; c++, index++) {
                 SerialPortSettings t = settings.Terminals[index];
@@ -62,17 +64,25 @@ public class MainTUIWindow : Window {
                     X = c == 0 ? 0 : Pos.Percent(50),
                     Y = r == 0 ? 0 : Pos.Percent(50),
                     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
-                    Height = rows == 1 ? Dim.Fill() : Dim.Percent(50)
+                    Height = rows == 1 ? Dim.Fill() : Dim.Percent(50),
+                    TabStop = TabBehavior.TabStop
                 };
 
                 //_ = frame.Add(panel.Frame);
                 _ = Add(panel.Frame);
 
                 _terminals.Add(t.PortName, panel);
+
+                if(firstPanel is null) {
+                    firstPanel = panel;
+                }
+                nextTabIndex = panel.ApplyTabOrder(nextTabIndex);
             }
         }
+        firstPanel?.FocusInput();
 
     }
+
 
     public static (int rows, int columns, bool threeLayout) DecideLayout(int count) {
 
