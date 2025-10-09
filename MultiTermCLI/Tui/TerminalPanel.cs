@@ -4,15 +4,16 @@ using libCommunication.Foundation;
 using libCommunication.interfaces;
 using Terminal.Gui;
 using System.Text;
+using MultiTermCLI.Configuration;
 
 namespace MultiTermCLI.Tui;
 
 public sealed class TerminalPanel : IDisposable {
 
-    private readonly SerialPortSettings _settings;
+    private readonly TerminalConfiguration _settings;
     private readonly CancellationTokenSource _cts;
-    private readonly SerialReadThread _srt;
-    private readonly SerialWriteThread _swt;
+    private readonly IReadThread _read_thread;
+    private readonly IWriteThread _write_thread;
     private readonly Thread _terminalLoop;
 
     private bool _disposed;
@@ -52,7 +53,7 @@ public sealed class TerminalPanel : IDisposable {
         set => _frame.TabStop = value;
     }
 
-    public TerminalPanel(SerialPortSettings settings) {
+    public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
         _writeLock = new();
 
@@ -69,7 +70,7 @@ public sealed class TerminalPanel : IDisposable {
         };
 
         _view = new TextView() {
-            Title = settings.PortName,
+            Title = _settings.Title,
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -105,10 +106,16 @@ public sealed class TerminalPanel : IDisposable {
         _frame.Add(_view);
         _frame.Add(_input.View);
 
+        Serial? port = null;
+        CommTCPClient? client = null;
+        if (_settings.ConnectionType is ConnectionType.Network) {
+            client = new CommTCPClient(_settings.NetworkConnectionSettings.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
+        } else {
+            port = new(_settings.SerialPortSettings.PortName, _settings.SerialPortSettings.BaudRate, _settings.SerialPortSettings.Parity, _settings.SerialPortSettings.DataBits, _settings.SerialPortSettings.StopBits) {
+                ReadTimeout = 200
+            };
+        }
 
-        Serial port = new(_settings.PortName, _settings.BaudRate, _settings.Parity, _settings.DataBits, _settings.StopBits) {
-            ReadTimeout = 200
-        };
 
         Console.WriteLine("Hello");
 
@@ -121,14 +128,24 @@ public sealed class TerminalPanel : IDisposable {
         };
 
 
-        _srt = new SerialReadThread(_settings.PortName, port, desc);
-        Task<Exception?> r = _srt.Start();
+        if (_settings.ConnectionType is ConnectionType.Network) {
+            _read_thread = new TCPReadThread("TCPThread", client, desc);
+        } else {
+            _read_thread = new SerialReadThread(_settings.Title, port, desc);
+        }
+
+        Task<Exception?> r = _read_thread.Start();
         if (r.Result is not null) {
             throw r.Result;
         }
 
-        _swt = new SerialWriteThread(_settings.PortName, port, desc);
-        r = _swt.Start();
+
+        if (_settings.ConnectionType is ConnectionType.Network) {
+            _write_thread = new TCPWriteThread("TCPThread", client, desc);
+        } else {
+            _write_thread = new SerialWriteThread(_settings.Title, port, desc);
+        }
+        r = _write_thread.Start();
         if (r.Result is not null) {
             throw r.Result;
         }
@@ -142,7 +159,7 @@ public sealed class TerminalPanel : IDisposable {
                 _input.Text = "";
 
                 libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
-                _swt.Addtoqueue(cmd, handle: null, CancellationToken.None);
+                _write_thread.Addtoqueue(cmd, handle: null, CancellationToken.None);
 
                 // optional: suppress default behavior
                 e.Handled = true;
@@ -159,7 +176,7 @@ public sealed class TerminalPanel : IDisposable {
     }
 
     private void TerminalLoopLogic(CancellationToken ct) {
-        IPacketSourceSink<byte[]>? sink = _srt.Sink;
+        IPacketSourceSink<byte[]>? sink = _read_thread.Sink;
 
         if (sink is null) {
             throw new InvalidOperationException("Sink is null!");
@@ -178,7 +195,7 @@ public sealed class TerminalPanel : IDisposable {
             }
 
         }
-        _srt.Stop();
+        _read_thread.Stop();
     }
 
     public int ApplyTabOrder(int startIndex) {
@@ -197,7 +214,7 @@ public sealed class TerminalPanel : IDisposable {
 
         _disposed = true;
         _cts.Cancel();
-        _swt.Stop();
+        _write_thread.Stop();
         _terminalLoop.Join();
         _cts.Dispose();
         _view.Dispose();

@@ -1,0 +1,25 @@
+{
+    "Terminals" : [
+        {
+            "ConnectionType": "Serial",
+            "SerialPortConnectionSettings": {
+                "PortName": "COM20",
+                "BaudRate": 115200,
+                "Parity": "None",
+                "DataBits": 8,
+                "StopBits": "One",
+            },
+        },
+
+        {
+            "ConnectionType": "Serial",
+            "SerialPortConnectionSettings": {
+                "PortName": "COM21",
+                "BaudRate": 115200,
+                "Parity": "None",
+                "DataBits": 8,
+                "StopBits": "One",
+            },
+        },
+    ]
+}
