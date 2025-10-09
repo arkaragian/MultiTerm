@@ -2,24 +2,40 @@
     "Terminals" : [
         {
             "ConnectionType": "Serial",
-            "SerialPortConnectionSettings": {
+            "SerialPortSettings": {
                 "PortName": "COM20",
                 "BaudRate": 115200,
                 "Parity": "None",
                 "DataBits": 8,
                 "StopBits": "One",
-            },
+                "LogSettings": {
+                    "EnableLogging": false,
+                    "LogTransmit": true,
+                    "TransmitLogType" : "byte",
+                    "LogReceive": true,
+                    "ReceiveLogType" : "byte",
+                    "LogLevel": "Information"
+                }
+            }
         },
 
         {
             "ConnectionType": "Serial",
-            "SerialPortConnectionSettings": {
+            "SerialPortSettings": {
                 "PortName": "COM21",
                 "BaudRate": 115200,
                 "Parity": "None",
                 "DataBits": 8,
                 "StopBits": "One",
-            },
-        },
+                "LogSettings": {
+                    "EnableLogging": false,
+                    "LogTransmit": true,
+                    "TransmitLogType" : "byte",
+                    "LogReceive": true,
+                    "ReceiveLogType" : "byte",
+                    "LogLevel": "Information"
+                }
+            }
+        }
     ]
 }

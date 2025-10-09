@@ -3,6 +3,7 @@ using MultiTermCLI.Configuration;
 using MultiTermCLI.Tui;
 using System.IO.Ports;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Terminal.Gui;
 
 namespace MultiTermCLI;
@@ -30,7 +31,13 @@ public class Program {
 
         string contents = File.ReadAllText(f);
 
-        TerminalSettings? settings = JsonSerializer.Deserialize<TerminalSettings>(contents);
+        JsonSerializerOptions options = new() {
+            PropertyNameCaseInsensitive = true
+        };
+        options.Converters.Add(new JsonStringEnumConverter());
+
+        TerminalSettings? settings = JsonSerializer.Deserialize<TerminalSettings>(contents, options);
+
 
         if (settings is null) {
             Console.WriteLine("Could not deserialize input configuration");
