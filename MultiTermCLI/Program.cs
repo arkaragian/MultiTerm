@@ -2,6 +2,7 @@
 using MultiTermCLI.Configuration;
 using MultiTermCLI.Tui;
 using System.IO.Ports;
+using System.Text.Json;
 using Terminal.Gui;
 
 namespace MultiTermCLI;
@@ -16,33 +17,25 @@ public class Program {
         //         return 0;
         //     }
         // }
+        //
+        if (args.Length is not 1) {
+            Console.WriteLine("MultiTerm Requires One Argument");
+        }
 
+        string f = args[0];
 
+        if (!File.Exists(f)) {
+            Console.WriteLine("File does not exist");
+        }
 
-        TerminalSettings settings = new() {
-            Terminals = [
-                new SerialPortSettings() {
-                    PortName = "COM1",
-                    BaudRate = 9600,
-                    Parity = Parity.None,
-                    DataBits = 8,
-                    StopBits = StopBits.One,
-                    LogSettings = new() {
-                        LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
-                    }
-                },
-                new SerialPortSettings() {
-                    PortName = "COM2",
-                    BaudRate = 9600,
-                    Parity = Parity.None,
-                    DataBits = 8,
-                    StopBits = StopBits.One,
-                    LogSettings = new() {
-                        LogLevel = Microsoft.Extensions.Logging.LogLevel.Information,
-                    }
-                }
-            ]
-        };
+        string contents = File.ReadAllText(f);
+
+        TerminalSettings? settings = JsonSerializer.Deserialize<TerminalSettings>(contents);
+
+        if (settings is null) {
+            Console.WriteLine("Could not deserialize input configuration");
+            return 1;
+        }
 
 
 
