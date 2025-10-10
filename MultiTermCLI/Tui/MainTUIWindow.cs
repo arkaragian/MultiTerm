@@ -14,6 +14,7 @@ public class MainTUIWindow : Window {
 
     public MainTUIWindow(TerminalSettings settings) : this() {
 
+
         ColorScheme = new ColorScheme {
             Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
             Focus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
@@ -39,7 +40,7 @@ public class MainTUIWindow : Window {
                     Y = r == 0 ? 0 : Pos.Percent(50),
                     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
                     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50),
-                    TabStop = TabBehavior.TabStop
+                    TabStop = TabBehavior.TabGroup
                 };
 
                 //_ = frame.Add(panel.Frame);

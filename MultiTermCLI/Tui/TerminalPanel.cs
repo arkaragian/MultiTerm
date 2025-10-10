@@ -18,8 +18,7 @@ public sealed class TerminalPanel : IDisposable {
 
     private bool _disposed;
 
-    private View _frame;
-    public View Frame => _frame;
+    public View Frame { get; }
 
     private TextView _view;
     public TextView View => _view;
@@ -29,44 +28,48 @@ public sealed class TerminalPanel : IDisposable {
     private readonly Lock _writeLock;
 
     public Pos X {
-        get => _frame.X;
-        set => _frame.X = value;
+        get => Frame.X;
+        set => Frame.X = value;
     }
 
     public Pos Y {
-        get => _frame.Y;
-        set => _frame.Y = value;
+        get => Frame.Y;
+        set => Frame.Y = value;
     }
 
     public Dim? Width {
-        get => _frame.Width;
-        set => _frame.Width = value;
+        get => Frame.Width;
+        set => Frame.Width = value;
     }
 
     public Dim? Height {
-        get => _frame.Height;
-        set => _frame.Height = value;
+        get => Frame.Height;
+        set => Frame.Height = value;
     }
 
     public TabBehavior? TabStop {
-        get => _frame.TabStop;
-        set => _frame.TabStop = value;
+        get => Frame.TabStop;
+        set => Frame.TabStop = value;
     }
 
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
         _writeLock = new();
 
+        if (!settings.IsValidSetting()) {
+            throw new InvalidOperationException("Settings are not valid");
+        }
+
         int _input_height = 3;
 
 
-        _frame = new View() {
+        Frame = new View() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             CanFocus = true,
-            TabStop = TabBehavior.TabStop
+            //TabStop = TabBehavior.TabStop
         };
 
         _view = new TextView() {
@@ -103,15 +106,15 @@ public sealed class TerminalPanel : IDisposable {
 
 
 
-        _frame.Add(_view);
-        _frame.Add(_input.View);
+        Frame.Add(_view);
+        Frame.Add(_input.View);
 
         Serial? port = null;
         CommTCPClient? client = null;
         if (_settings.ConnectionType is ConnectionType.Network) {
-            client = new CommTCPClient(_settings.NetworkConnectionSettings.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
+            client = new CommTCPClient(_settings.NetworkConnectionSettings!.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
         } else {
-            port = new(_settings.SerialPortSettings.PortName, _settings.SerialPortSettings.BaudRate, _settings.SerialPortSettings.Parity, _settings.SerialPortSettings.DataBits, _settings.SerialPortSettings.StopBits) {
+            port = new(_settings.SerialPortSettings!.PortName, _settings.SerialPortSettings.BaudRate, _settings.SerialPortSettings.Parity, _settings.SerialPortSettings.DataBits, _settings.SerialPortSettings.StopBits) {
                 ReadTimeout = 200
             };
         }
@@ -129,9 +132,9 @@ public sealed class TerminalPanel : IDisposable {
 
 
         if (_settings.ConnectionType is ConnectionType.Network) {
-            _read_thread = new TCPReadThread("TCPThread", client, desc);
+            _read_thread = new TCPReadThread("TCPThread", client!, desc);
         } else {
-            _read_thread = new SerialReadThread(_settings.Title, port, desc);
+            _read_thread = new SerialReadThread(_settings.Title, port!, desc);
         }
 
         Task<Exception?> r = _read_thread.Start();
@@ -141,9 +144,9 @@ public sealed class TerminalPanel : IDisposable {
 
 
         if (_settings.ConnectionType is ConnectionType.Network) {
-            _write_thread = new TCPWriteThread("TCPThread", client, desc);
+            _write_thread = new TCPWriteThread("TCPThread", client!, desc);
         } else {
-            _write_thread = new SerialWriteThread(_settings.Title, port, desc);
+            _write_thread = new SerialWriteThread(_settings.Title, port!, desc);
         }
         r = _write_thread.Start();
         if (r.Result is not null) {
@@ -153,7 +156,7 @@ public sealed class TerminalPanel : IDisposable {
 
         _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
-                string text = _input.Text.ToString();
+                string text = _input.BuildPayload();
 
                 // handle the completed input here
                 _input.Text = "";

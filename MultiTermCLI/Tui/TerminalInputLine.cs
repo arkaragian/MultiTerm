@@ -15,16 +15,6 @@ public sealed class TerminalInputLine : IDisposable {
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
 
-    // public bool AppendCR {
-    //     get { return _sendCR.Checked; }
-    //     set { _sendCR.Checked = value; }
-    // }
-    //
-    // public bool AppendLF {
-    //     get { return _sendLF.Checked; }
-    //     set { _sendLF.Checked = value; }
-    // }
-
     public Pos X {
         get => _root.X;
         set => _root.X = value;
@@ -125,12 +115,14 @@ public sealed class TerminalInputLine : IDisposable {
 
     public string BuildPayload() {
         string s = _input.Text?.ToString() ?? string.Empty;
-        // if (AppendCR) {
-        //     s += "\r";
-        // }
-        // if (AppendLF) {
-        //     s += "\n";
-        // }
+        if (_sendCR.CheckedState is CheckState.Checked) {
+            s += "\r";
+        }
+        if (_sendLF.CheckedState is CheckState.Checked) {
+            s += "\n";
+        }
+
+        _input.Text = "";
         return s;
     }
 

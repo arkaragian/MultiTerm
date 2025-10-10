@@ -1,7 +1,5 @@
-﻿using libCommunication.Configuration;
-using MultiTermCLI.Configuration;
+﻿using MultiTermCLI.Configuration;
 using MultiTermCLI.Tui;
-using System.IO.Ports;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Terminal.Gui;
@@ -48,6 +46,7 @@ public class Program {
 
 
         Application.Init();                         // set raw mode, alt screen, colors
+        Application.Navigation.AdvanceFocus(NavigationDirection.Forward, TabBehavior.TabStop);
         try {
             // optional: make Ctrl+C quit
             Console.TreatControlCAsInput = false;

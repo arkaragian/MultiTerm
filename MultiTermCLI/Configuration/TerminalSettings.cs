@@ -9,13 +9,13 @@ public class TerminalConfiguration {
 
     public bool IsValidSetting() {
         if (ConnectionType is ConnectionType.Network) {
-            if(NetworkConnectionSettings is not null) {
+            if (NetworkConnectionSettings is not null) {
                 return true;
             }
         }
 
         if (ConnectionType is ConnectionType.Serial) {
-            if(SerialPortSettings is not null) {
+            if (SerialPortSettings is not null) {
                 return true;
             }
         }
@@ -25,10 +25,14 @@ public class TerminalConfiguration {
 
     public string Title {
         get {
-            if (ConnectionType is ConnectionType.Network) {
-                return NetworkConnectionSettings.RemoteAddress;
+            if (!IsValidSetting()) {
+                throw new InvalidOperationException("Settings are not valid");
             }
-            return SerialPortSettings.PortName;
+
+            if (ConnectionType is ConnectionType.Network) {
+                return NetworkConnectionSettings!.RemoteAddress;
+            }
+            return SerialPortSettings!.PortName;
         }
     }
 }
