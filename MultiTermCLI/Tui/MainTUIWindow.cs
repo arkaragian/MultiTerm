@@ -51,7 +51,6 @@ public class MainTUIWindow : Window {
                 if(firstPanel is null) {
                     firstPanel = panel;
                 }
-                nextTabIndex = panel.ApplyTabOrder(nextTabIndex);
             }
         }
         firstPanel?.FocusInput();

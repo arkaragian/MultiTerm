@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Terminal.Gui;
 
 public sealed class TerminalInputLine : IDisposable {
@@ -14,6 +15,7 @@ public sealed class TerminalInputLine : IDisposable {
 
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
+    private readonly CheckBox _sendHEX;
 
     public Pos X {
         get => _root.X;
@@ -75,7 +77,7 @@ public sealed class TerminalInputLine : IDisposable {
         _input = new TextField() {
             X = 0,
             Y = 0,
-            Width = Dim.Fill(18), // reserve room for " CR  LF "
+            Width = Dim.Fill(19), // reserve room for " CR  LF HEX"
             Height = 1,
             ReadOnly = false,
             CanFocus = true,
@@ -91,7 +93,14 @@ public sealed class TerminalInputLine : IDisposable {
 
         _sendLF = new CheckBox() {
             Text = "LF",
-            X = Pos.Right(_sendCR) + 2,
+            X = Pos.Right(_sendCR) + 1,
+            Y = 0,
+            TabStop = TabBehavior.TabStop
+        };
+
+        _sendHEX = new CheckBox() {
+            Text = "HEX",
+            X = Pos.Right(_sendLF) + 1,
             Y = 0,
             TabStop = TabBehavior.TabStop
         };
@@ -99,6 +108,7 @@ public sealed class TerminalInputLine : IDisposable {
         _root.Add(_input);
         _root.Add(_sendCR);
         _root.Add(_sendLF);
+        _root.Add(_sendHEX);
 
         // Capture key presses on the frame
         _input.KeyDown += (object? sender, Key e) => {
@@ -106,24 +116,44 @@ public sealed class TerminalInputLine : IDisposable {
         };
     }
 
-    public int ApplyTabOrder(int startIndex) {
-        // _input.TabIndex = startIndex++;
-        // _sendCR.TabIndex = startIndex++;
-        // _sendLF.TabIndex = startIndex++;
-        return startIndex;
-    }
+    public byte[] BuildPayload() {
 
-    public string BuildPayload() {
-        string s = _input.Text?.ToString() ?? string.Empty;
-        if (_sendCR.CheckedState is CheckState.Checked) {
-            s += "\r";
-        }
-        if (_sendLF.CheckedState is CheckState.Checked) {
-            s += "\n";
+        if (_sendHEX.CheckedState is CheckState.Checked) {
+            List<byte> result = new();
+
+            string s = _input.Text?.ToString() ?? string.Empty;
+
+            string[] string_bytes = s.Split(' ');
+            foreach (string sb in string_bytes) {
+                byte value = Convert.ToByte(sb.Substring(2), 16);
+                result.Add(value);
+            }
+
+            if (_sendCR.CheckedState is CheckState.Checked) {
+                result.Add((byte)'\r');
+            }
+            if (_sendLF.CheckedState is CheckState.Checked) {
+                result.Add((byte)'\n');
+            }
+
+            _input.Text = "";
+            return result.ToArray();
+
+        } else {
+
+            string s = _input.Text?.ToString() ?? string.Empty;
+
+            if (_sendCR.CheckedState is CheckState.Checked) {
+                s += (byte)'\r';
+            }
+            if (_sendLF.CheckedState is CheckState.Checked) {
+                s += (byte)'\n';
+            }
+
+            _input.Text = "";
+            return Encoding.ASCII.GetBytes(s);
         }
 
-        _input.Text = "";
-        return s;
     }
 
     public void Dispose() {

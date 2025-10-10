@@ -156,12 +156,12 @@ public sealed class TerminalPanel : IDisposable {
 
         _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
-                string text = _input.BuildPayload();
+                byte[] text = _input.BuildPayload();
 
                 // handle the completed input here
                 _input.Text = "";
 
-                libCommunication.Command cmd = new(Encoding.ASCII.GetBytes(text), LayerCommand.None, null);
+                libCommunication.Command cmd = new(text, LayerCommand.None, null);
                 _write_thread.Addtoqueue(cmd, handle: null, CancellationToken.None);
 
                 // optional: suppress default behavior
@@ -201,14 +201,9 @@ public sealed class TerminalPanel : IDisposable {
         _read_thread.Stop();
     }
 
-    public int ApplyTabOrder(int startIndex) {
-        return _input.ApplyTabOrder(startIndex);
-    }
-
     public void FocusInput() {
         Application.Invoke(() => _input.Input.SetFocus());
     }
-
 
     public void Dispose() {
         if (_disposed) {
