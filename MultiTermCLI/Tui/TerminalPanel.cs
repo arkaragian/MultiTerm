@@ -169,6 +169,17 @@ public sealed class TerminalPanel : IDisposable {
             }
         };
 
+        Frame.KeyDown += (object? sender, Key e) => {
+            if (e == Key.F1) {
+                SettingsDialog dialog = new() {
+                    //TODO: Get the focused pane and move on.
+                    Title = "Settings"
+                };
+                Application.Run(dialog);
+                e.Handled = true;
+            }
+        };
+
         _cts = new();
 
         _terminalLoop = new Thread(() => TerminalLoopLogic(_cts.Token));
