@@ -54,9 +54,15 @@ public sealed class TerminalPanel : IDisposable {
 
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
+        if (_settings.HexInputSettings is null) {
+            _settings.HexInputSettings = new HexInputSettings() {
+                InputFormat = HexInputFormat.ZeroPrefixed,
+                Seperator = HexSeperator.Space
+            };
+        }
         _writeLock = new();
 
-        if (!settings.IsValidSetting()) {
+        if (!_settings.IsValidSetting()) {
             throw new InvalidOperationException("Settings are not valid");
         }
 
@@ -96,15 +102,6 @@ public sealed class TerminalPanel : IDisposable {
             },
             TabStop = TabBehavior.TabStop
         };
-
-        // Hook into drawing events to change border color dynamically
-        // _input.DrawContent += (e) => {
-        //     var borderColor = _input.HasFocus ? Color.BrightYellow : Color.BrightGreen;
-        //     _input.Border.BorderBrush = borderColor;
-        // };
-
-
-
 
         Frame.Add(_view);
         Frame.Add(_input.View);
@@ -171,9 +168,12 @@ public sealed class TerminalPanel : IDisposable {
 
         Frame.KeyDown += (object? sender, Key e) => {
             if (e == Key.F1) {
-                SettingsDialog dialog = new() {
-                    //TODO: Get the focused pane and move on.
-                    Title = "Settings"
+                if (_settings.HexInputSettings is null) {
+                    throw new InvalidOperationException("Null hex input settings!");
+                }
+                SettingsDialog dialog = new(_settings.HexInputSettings) {
+                    Title = _settings.Title + " Settings",
+                    //TabStop = TabBehavior.TabStop
                 };
                 Application.Run(dialog);
                 e.Handled = true;

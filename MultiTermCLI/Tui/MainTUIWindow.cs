@@ -28,7 +28,6 @@ public class MainTUIWindow : Window {
         (int rows, int cols, bool threeLayout) = DecideLayout(count);
 
         int index = 0;
-        int nextTabIndex = 0;
         TerminalPanel? firstPanel = null;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols && index < count; c++, index++) {
