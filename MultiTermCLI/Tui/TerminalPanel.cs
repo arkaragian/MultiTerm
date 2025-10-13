@@ -2,9 +2,9 @@ using libCommunication;
 using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
-using Terminal.Gui;
-using System.Text;
 using MultiTermCLI.Configuration;
+using System.Text;
+using Terminal.Gui;
 
 namespace MultiTermCLI.Tui;
 
@@ -19,11 +19,9 @@ public sealed class TerminalPanel : IDisposable {
     private bool _disposed;
 
     public View Frame { get; }
+    public TextView View { get; }
 
-    private TextView _view;
-    public TextView View => _view;
-
-    private TerminalInputLine _input;
+    private readonly TerminalInputLine _input;
 
     private readonly Lock _writeLock;
 
@@ -78,7 +76,7 @@ public sealed class TerminalPanel : IDisposable {
             //TabStop = TabBehavior.TabStop
         };
 
-        _view = new TextView() {
+        View = new TextView() {
             Title = _settings.Title,
             X = 0,
             Y = 0,
@@ -89,7 +87,7 @@ public sealed class TerminalPanel : IDisposable {
             CanFocus = false,
         };
 
-        _input = new TerminalInputLine() {
+        _input = new TerminalInputLine(_settings.HexInputSettings) {
             Title = "Input",
             X = 0,
             Y = Pos.AnchorEnd(_input_height),
@@ -103,8 +101,8 @@ public sealed class TerminalPanel : IDisposable {
             TabStop = TabBehavior.TabStop
         };
 
-        Frame.Add(_view);
-        Frame.Add(_input.View);
+        _ = Frame.Add(View);
+        _ = Frame.Add(_input.View);
 
         Serial? port = null;
         CommTCPClient? client = null;
@@ -115,9 +113,6 @@ public sealed class TerminalPanel : IDisposable {
                 ReadTimeout = 200
             };
         }
-
-
-        Console.WriteLine("Hello");
 
         ProtocolDescription desc = new() {
             StandardHeaderLength = -1,
@@ -153,7 +148,13 @@ public sealed class TerminalPanel : IDisposable {
 
         _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
-                byte[] text = _input.BuildPayload();
+                byte[]? text = _input.BuildPayload();
+
+                if (text is null) {
+                    _ = MessageBox.ErrorQuery("Error", "Invalid Input", buttons: ["OK"]);
+                    e.Handled = true;
+                    return;
+                }
 
                 // handle the completed input here
                 _input.Text = "";
@@ -176,6 +177,14 @@ public sealed class TerminalPanel : IDisposable {
                     //TabStop = TabBehavior.TabStop
                 };
                 Application.Run(dialog);
+
+                if (dialog.Accepted) {
+                    _settings.HexInputSettings = dialog.ResultSettings;
+                    _input.InputSettings = _settings.HexInputSettings;
+                    _ = MessageBox.Query("Confirm", "New Settings Applied", buttons: ["OK"]);
+                } else {
+                    _ = MessageBox.Query("Confirm", "No Settings Applied", buttons: ["OK"]);
+                }
                 e.Handled = true;
             }
         };
@@ -198,11 +207,11 @@ public sealed class TerminalPanel : IDisposable {
         while (!ct.IsCancellationRequested) {
             try {
                 (byte[] payload, _) = sink.Take(ct);
-                string text = System.Text.Encoding.ASCII.GetString(payload);
+                string text = Encoding.ASCII.GetString(payload);
 
                 Application.Invoke(() => {
-                    _view.Text += text;
-                    _view.MoveEnd(); // optional: scrolls to bottom
+                    View.Text += text;
+                    View.MoveEnd(); // optional: scrolls to bottom
                 });
             } catch (OperationCanceledException) {
                 break;
@@ -226,7 +235,7 @@ public sealed class TerminalPanel : IDisposable {
         _write_thread.Stop();
         _terminalLoop.Join();
         _cts.Dispose();
-        _view.Dispose();
+        View.Dispose();
     }
 
 }

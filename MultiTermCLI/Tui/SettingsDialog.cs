@@ -1,10 +1,18 @@
-using Terminal.Gui;
 using MultiTermCLI.Configuration;
+using Terminal.Gui;
+
+namespace MultiTermCLI.Tui;
 
 public class SettingsDialog : Dialog {
 
-    private TabView _tabView;
-    private HexInputSettings _inputSettings;
+    private readonly TabView _tabView;
+    private readonly HexInputSettings _inputSettings;
+
+    RadioGroup _formats;
+    RadioGroup _seperators;
+
+    public bool Accepted { get; private set; }
+    public HexInputSettings ResultSettings { get; private set; }
 
     public SettingsDialog(HexInputSettings inputSettings) : base() {
         //Title = "Settings";
@@ -28,13 +36,21 @@ public class SettingsDialog : Dialog {
             CanFocus = true,
         };
 
-        Tab display_settings = BuildHexSettingsTab();
+        Tab hex_input_settings = BuildHexSettingsTab();
+        Tab display_settings = BuildDisplaySettingsTab();
 
-        _tabView.AddTab(display_settings, true);
+        _tabView.AddTab(hex_input_settings, true);
+        _tabView.AddTab(display_settings, false);
 
-        Add(_tabView);
+        _ = Add(_tabView);
 
-        this.KeyDown += (object? sender, Key e) => {
+        ResultSettings = new HexInputSettings() {
+            InputFormat = HexInputFormat.ZeroPrefixed,
+            Seperator = HexSeperator.Space,
+        };
+
+
+        KeyDown += (sender, e) => {
             if (e == Key.Esc || e == Key.Q) {
                 Application.RequestStop(this);
                 e.Handled = true;
@@ -68,8 +84,8 @@ public class SettingsDialog : Dialog {
             TabStop = TabBehavior.NoStop
         };
 
-        _container.Add(_format_container);
-        _container.Add(_seperator_container);
+        _ = _container.Add(_format_container);
+        _ = _container.Add(_seperator_container);
 
         TextView _example = new() {
             Title = "Hex Input Example",
@@ -81,17 +97,114 @@ public class SettingsDialog : Dialog {
             BorderStyle = LineStyle.Single,
             CanFocus = false,
             Multiline = false,
-            Text = "Hello World",
+            Text = "Hello World",//Payload.BuildPayload("Hello World", asHex: true, _inputSettings, false, false)
             //TabStop = TabBehavior.TabStop
         };
 
-        _container.Add(_example);
+        _ = _container.Add(_example);
+
+
+        Button ok = new() {
+            Text = "OK",
+            X = Pos.AnchorEnd(offset: 20),
+            Y = Pos.AnchorEnd(offset: 10),
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        ok.Accepting += (object? sender, CommandEventArgs args) => {
+            CommitSelections();
+            Accepted = true;
+            Application.RequestStop(this);
+        };
+
+        Button cancel = new() {
+            Text = "Cancel",
+            X = Pos.AnchorEnd(offset: 12),
+            Y = Pos.AnchorEnd(offset: 10),
+            CanFocus = true,
+            //IsDefault = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        cancel.Accepting += (object? sender, CommandEventArgs args) => {
+            Accepted = false;
+            Application.RequestStop(this);
+        };
+
+        _ = _container.Add(ok);
+        _ = _container.Add(cancel);
 
 
         display_settings.View = _container;
 
         //display_settings.Add(_container);
         return display_settings;
+
+    }
+
+    private Tab BuildDisplaySettingsTab() {
+
+        Tab display_settings = new() {
+            DisplayText = "Display Settings",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true
+        };
+
+
+        View _format_container = BuildDisplayFormatsView();
+
+        View _container = new() {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true,
+            TabStop = TabBehavior.NoStop
+        };
+
+        _ = _container.Add(_format_container);
+
+        Button ok = new() {
+            Text = "OK",
+            X = Pos.AnchorEnd(offset: 20),
+            Y = Pos.AnchorEnd(offset: 10),
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        ok.Accepting += (object? sender, CommandEventArgs args) => {
+            CommitSelections();
+            Accepted = true;
+            Application.RequestStop(this);
+        };
+
+        Button cancel = new() {
+            Text = "Cancel",
+            X = Pos.AnchorEnd(offset: 12),
+            Y = Pos.AnchorEnd(offset: 10),
+            CanFocus = true,
+            //IsDefault = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        cancel.Accepting += (object? sender, CommandEventArgs args) => {
+            Accepted = false;
+            Application.RequestStop(this);
+        };
+
+        _ = _container.Add(ok);
+        _ = _container.Add(cancel);
+
+
+        display_settings.View = _container;
+
+        //display_settings.Add(_container);
+        return display_settings;
+
 
     }
 
@@ -112,7 +225,7 @@ public class SettingsDialog : Dialog {
             Y = 0,
         };
 
-        RadioGroup _formats = new() {
+        _formats = new() {
             RadioLabels = [
                 "Zero Prefixed: 0xAB",
                 "H Prefixed   : hAB",
@@ -125,7 +238,7 @@ public class SettingsDialog : Dialog {
             TabStop = TabBehavior.TabStop
         };
 
-        switch(_inputSettings.InputFormat) {
+        switch (_inputSettings.InputFormat) {
             case HexInputFormat.ZeroPrefixed:
                 _formats.SelectedItem = 0;
                 break;
@@ -140,8 +253,8 @@ public class SettingsDialog : Dialog {
                 break;
         }
 
-        _format_container.Add(_hex_format);
-        _format_container.Add(_formats);
+        _ = _format_container.Add(_hex_format);
+        _ = _format_container.Add(_formats);
 
         return _format_container;
     }
@@ -164,7 +277,7 @@ public class SettingsDialog : Dialog {
             Y = 0,
         };
 
-        RadioGroup _seperators = new() {
+        _seperators = new() {
             RadioLabels = [
                 "Space",
                 "Comma"
@@ -175,7 +288,7 @@ public class SettingsDialog : Dialog {
             TabStop = TabBehavior.TabStop
         };
 
-        switch(_inputSettings.Seperator) {
+        switch (_inputSettings.Seperator) {
             case HexSeperator.Space:
                 _seperators.SelectedItem = 0;
                 break;
@@ -184,9 +297,88 @@ public class SettingsDialog : Dialog {
                 break;
         }
 
-        _seperator_container.Add(_hex_seperator);
-        _seperator_container.Add(_seperators);
+        _ = _seperator_container.Add(_hex_seperator);
+        _ = _seperator_container.Add(_seperators);
 
         return _seperator_container;
+    }
+
+
+    private View BuildDisplayFormatsView() {
+        View _format_container = new() {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            //Height = Dim.Percent(50),
+            Height = 8,
+            BorderStyle = LineStyle.Single,
+            CanFocus = true,
+        };
+
+        Label _hex_format = new() {
+            Text = "Display Format:",
+            X = 0,
+            Y = 0,
+        };
+
+        RadioGroup _the_formats = new() {
+            RadioLabels = [
+                "ASCII            : Hello",
+                "Zero Prefixed Hex: 0x48 0x65 0x6C 0x6C 0x6F",
+                "H Prefixed Hex   : h48 h65 h6C h6C h6F",
+                "Non Prefixed Hex : 48 65 6C 6C 6F",
+                "Decimal          : 72 101 108 108 111",
+            ],
+            X = 0,
+            Y = Pos.Bottom(_hex_format) + 1,
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        RadioGroup _ascii_settings = new() {
+            RadioLabels = [
+                "Escape CRLF      : C",
+            ],
+            X = 0,
+            Y = Pos.Bottom(_the_formats) + 1,
+            CanFocus = true,
+            TabStop = TabBehavior.TabStop
+        };
+
+        // switch (_inputSettings.InputFormat) {
+        //     case HexInputFormat.ZeroPrefixed:
+        //         _formats.SelectedItem = 0;
+        //         break;
+        //     case HexInputFormat.HPrefixed:
+        //         _formats.SelectedItem = 1;
+        //         break;
+        //     case HexInputFormat.NonPrefixed:
+        //         _formats.SelectedItem = 2;
+        //         break;
+        //     case HexInputFormat.Decimal:
+        //         _formats.SelectedItem = 3;
+        //         break;
+        // }
+
+        _ = _format_container.Add(_hex_format);
+        _ = _format_container.Add(_the_formats);
+        _ = _format_container.Add(_ascii_settings);
+
+        return _format_container;
+    }
+
+    private void CommitSelections() {
+        ResultSettings = new HexInputSettings {
+            InputFormat = _formats.SelectedItem switch {
+                0 => HexInputFormat.ZeroPrefixed,
+                1 => HexInputFormat.HPrefixed,
+                2 => HexInputFormat.NonPrefixed,
+                _ => HexInputFormat.Decimal
+            },
+            Seperator = _seperators.SelectedItem switch {
+                0 => HexSeperator.Space,
+                _ => HexSeperator.Comma
+            }
+        };
     }
 }

@@ -1,72 +1,73 @@
-using System;
+using MultiTermCLI.Configuration;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Terminal.Gui;
 
-public sealed class TerminalInputLine : IDisposable {
-    private readonly View _root;
-    public View View {
-        get { return _root; }
-    }
+namespace MultiTermCLI.Tui;
 
-    private readonly TextField _input;
-    public TextField Input {
-        get { return _input; }
-    }
+public sealed class TerminalInputLine : IDisposable {
+    public View View { get; }
+    public TextField Input { get; }
 
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
     private readonly CheckBox _sendHEX;
 
     public Pos X {
-        get => _root.X;
-        set => _root.X = value;
+        get => View.X;
+        set => View.X = value;
     }
 
     public Pos Y {
-        get => _root.Y;
-        set => _root.Y = value;
+        get => View.Y;
+        set => View.Y = value;
     }
 
     public Dim? Width {
-        get => _root.Width;
-        set => _root.Width = value;
+        get => View.Width;
+        set => View.Width = value;
     }
 
     public Dim? Height {
-        get => _root.Height;
-        set => _root.Height = value;
+        get => View.Height;
+        set => View.Height = value;
     }
 
     public string Title {
-        get => _root.Title;
-        set => _root.Title = value;
+        get => View.Title;
+        set => View.Title = value;
     }
 
     public string Text {
-        get => _input.Text;
-        set => _input.Text = value;
+        get => Input.Text;
+        set => Input.Text = value;
     }
 
     public LineStyle BorderStyle {
-        get => _root.BorderStyle;
-        set => _root.BorderStyle = value;
+        get => View.BorderStyle;
+        set => View.BorderStyle = value;
     }
 
     public ColorScheme? ColorScheme {
-        get => _root.ColorScheme;
-        set => _root.ColorScheme = value;
+        get => View.ColorScheme;
+        set => View.ColorScheme = value;
     }
 
     public TabBehavior? TabStop {
-        get => _root.TabStop;
-        set => _root.TabStop = value;
+        get => View.TabStop;
+        set => View.TabStop = value;
     }
 
     //public event Action<Key>? KeyDown;
     public event EventHandler<Key>? KeyDown;
 
-    public TerminalInputLine() {
-        _root = new View() {
+    public HexInputSettings InputSettings { get; set; }
+
+    public TerminalInputLine(HexInputSettings settings) {
+        InputSettings = settings;
+
+        View = new View() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -74,7 +75,7 @@ public sealed class TerminalInputLine : IDisposable {
             CanFocus = true,
         };
 
-        _input = new TextField() {
+        Input = new TextField() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(19), // reserve room for " CR  LF HEX"
@@ -86,7 +87,7 @@ public sealed class TerminalInputLine : IDisposable {
 
         _sendCR = new CheckBox() {
             Text = "CR",
-            X = Pos.Right(_input) + 1,
+            X = Pos.Right(Input) + 1,
             Y = 0,
             TabStop = TabBehavior.TabStop
         };
@@ -105,29 +106,62 @@ public sealed class TerminalInputLine : IDisposable {
             TabStop = TabBehavior.TabStop
         };
 
-        _root.Add(_input);
-        _root.Add(_sendCR);
-        _root.Add(_sendLF);
-        _root.Add(_sendHEX);
+        _ = View.Add(Input);
+        _ = View.Add(_sendCR);
+        _ = View.Add(_sendLF);
+        _ = View.Add(_sendHEX);
 
         // Capture key presses on the frame
-        _input.KeyDown += (object? sender, Key e) => {
+        Input.KeyDown += (sender, e) => {
             KeyDown?.Invoke(sender, e);
         };
     }
 
-    public byte[] BuildPayload() {
+    public byte[]? BuildPayload() {
 
         if (_sendHEX.CheckedState is CheckState.Checked) {
-            List<byte> result = new();
+            List<byte> result = [];
 
-            string s = _input.Text?.ToString() ?? string.Empty;
+            string? s = Input.Text?.ToString();
+            if (s is null) {
+                return null;
+            }
+            //TODO: Validation
+            //
+            char sep = InputSettings.Seperator switch {
+                HexSeperator.Space => ' ',
+                HexSeperator.Comma => ',',
+                _ => throw new NotImplementedException(),
+            };
 
-            string[] string_bytes = s.Split(' ');
+            string regex = InputSettings.InputFormat switch {
+                HexInputFormat.ZeroPrefixed => @"^0x[0-9A-Fa-f]{2}$",
+                HexInputFormat.HPrefixed => @"^h[0-9A-Fa-f]{2}$",
+                HexInputFormat.NonPrefixed => @"^[0-9A-Fa-f]{2}$",
+                HexInputFormat.Decimal => @"^(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})$",
+                _ => throw new NotImplementedException(),
+            };
+
+            Regex rgo = new(regex);
+
+            string[] string_bytes = s.Split(sep);
+
             foreach (string sb in string_bytes) {
-                byte value = Convert.ToByte(sb.Substring(2), 16);
+                bool ok = rgo.IsMatch(sb);
+                if (!ok) {
+                    return null;
+                }
+
+                byte value = InputSettings.InputFormat switch {
+                    HexInputFormat.ZeroPrefixed => Convert.ToByte(sb[2..], 16),
+                    HexInputFormat.HPrefixed => Convert.ToByte(sb[1..], 16),
+                    HexInputFormat.NonPrefixed => Convert.ToByte(sb, 16),
+                    HexInputFormat.Decimal => byte.Parse(sb, CultureInfo.InvariantCulture),
+                    _ => throw new NotImplementedException(),
+                };
                 result.Add(value);
             }
+
 
             if (_sendCR.CheckedState is CheckState.Checked) {
                 result.Add((byte)'\r');
@@ -136,12 +170,15 @@ public sealed class TerminalInputLine : IDisposable {
                 result.Add((byte)'\n');
             }
 
-            _input.Text = "";
-            return result.ToArray();
+            Input.Text = "";
+            return [.. result];
 
         } else {
 
-            string s = _input.Text?.ToString() ?? string.Empty;
+            string? s = Input.Text?.ToString();
+            if (s is null) {
+                return [];
+            }
 
             if (_sendCR.CheckedState is CheckState.Checked) {
                 s += (byte)'\r';
@@ -150,7 +187,7 @@ public sealed class TerminalInputLine : IDisposable {
                 s += (byte)'\n';
             }
 
-            _input.Text = "";
+            Input.Text = "";
             return Encoding.ASCII.GetBytes(s);
         }
 
@@ -159,7 +196,7 @@ public sealed class TerminalInputLine : IDisposable {
     public void Dispose() {
         _sendLF?.Dispose();
         _sendCR?.Dispose();
-        _input?.Dispose();
-        _root?.Dispose();
+        Input?.Dispose();
+        View?.Dispose();
     }
 }
