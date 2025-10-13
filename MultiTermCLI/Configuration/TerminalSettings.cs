@@ -7,6 +7,7 @@ public class TerminalConfiguration {
     public SerialPortSettings? SerialPortSettings { get; set; }
     public NetworkConnectionSettings? NetworkConnectionSettings { get; set; }
     public HexSettings? HexInputSettings { get; set; }
+    public HexSettings? HexDisplaySettings { get; set; }
 
     public bool IsValidSetting() {
         if (ConnectionType is ConnectionType.Network) {
