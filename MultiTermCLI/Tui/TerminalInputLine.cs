@@ -62,9 +62,9 @@ public sealed class TerminalInputLine : IDisposable {
     //public event Action<Key>? KeyDown;
     public event EventHandler<Key>? KeyDown;
 
-    public HexInputSettings InputSettings { get; set; }
+    public HexSettings InputSettings { get; set; }
 
-    public TerminalInputLine(HexInputSettings settings) {
+    public TerminalInputLine(HexSettings settings) {
         InputSettings = settings;
 
         View = new View() {
@@ -129,16 +129,16 @@ public sealed class TerminalInputLine : IDisposable {
             //TODO: Validation
             //
             char sep = InputSettings.Seperator switch {
-                HexSeperator.Space => ' ',
-                HexSeperator.Comma => ',',
+                HexSequenceSeperator.Space => ' ',
+                HexSequenceSeperator.Comma => ',',
                 _ => throw new NotImplementedException(),
             };
 
             string regex = InputSettings.InputFormat switch {
-                HexInputFormat.ZeroPrefixed => @"^0x[0-9A-Fa-f]{2}$",
-                HexInputFormat.HPrefixed => @"^h[0-9A-Fa-f]{2}$",
-                HexInputFormat.NonPrefixed => @"^[0-9A-Fa-f]{2}$",
-                HexInputFormat.Decimal => @"^(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})$",
+                HexFormat.ZeroPrefixed => @"^0x[0-9A-Fa-f]{2}$",
+                HexFormat.HPrefixed => @"^h[0-9A-Fa-f]{2}$",
+                HexFormat.NonPrefixed => @"^[0-9A-Fa-f]{2}$",
+                HexFormat.Decimal => @"^(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})$",
                 _ => throw new NotImplementedException(),
             };
 
@@ -153,10 +153,10 @@ public sealed class TerminalInputLine : IDisposable {
                 }
 
                 byte value = InputSettings.InputFormat switch {
-                    HexInputFormat.ZeroPrefixed => Convert.ToByte(sb[2..], 16),
-                    HexInputFormat.HPrefixed => Convert.ToByte(sb[1..], 16),
-                    HexInputFormat.NonPrefixed => Convert.ToByte(sb, 16),
-                    HexInputFormat.Decimal => byte.Parse(sb, CultureInfo.InvariantCulture),
+                    HexFormat.ZeroPrefixed => Convert.ToByte(sb[2..], 16),
+                    HexFormat.HPrefixed => Convert.ToByte(sb[1..], 16),
+                    HexFormat.NonPrefixed => Convert.ToByte(sb, 16),
+                    HexFormat.Decimal => byte.Parse(sb, CultureInfo.InvariantCulture),
                     _ => throw new NotImplementedException(),
                 };
                 result.Add(value);

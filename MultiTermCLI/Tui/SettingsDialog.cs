@@ -6,15 +6,15 @@ namespace MultiTermCLI.Tui;
 public class SettingsDialog : Dialog {
 
     private readonly TabView _tabView;
-    private readonly HexInputSettings _inputSettings;
+    private readonly HexSettings _inputSettings;
 
     RadioGroup _formats;
     RadioGroup _seperators;
 
     public bool Accepted { get; private set; }
-    public HexInputSettings ResultSettings { get; private set; }
+    public HexSettings ResultSettings { get; private set; }
 
-    public SettingsDialog(HexInputSettings inputSettings) : base() {
+    public SettingsDialog(HexSettings inputSettings) : base() {
         //Title = "Settings";
         Modal = true;
         DefaultShadow = ShadowStyle.None;
@@ -44,9 +44,9 @@ public class SettingsDialog : Dialog {
 
         _ = Add(_tabView);
 
-        ResultSettings = new HexInputSettings() {
-            InputFormat = HexInputFormat.ZeroPrefixed,
-            Seperator = HexSeperator.Space,
+        ResultSettings = new HexSettings() {
+            InputFormat = HexFormat.ZeroPrefixed,
+            Seperator = HexSequenceSeperator.Space,
         };
 
 
@@ -239,16 +239,16 @@ public class SettingsDialog : Dialog {
         };
 
         switch (_inputSettings.InputFormat) {
-            case HexInputFormat.ZeroPrefixed:
+            case HexFormat.ZeroPrefixed:
                 _formats.SelectedItem = 0;
                 break;
-            case HexInputFormat.HPrefixed:
+            case HexFormat.HPrefixed:
                 _formats.SelectedItem = 1;
                 break;
-            case HexInputFormat.NonPrefixed:
+            case HexFormat.NonPrefixed:
                 _formats.SelectedItem = 2;
                 break;
-            case HexInputFormat.Decimal:
+            case HexFormat.Decimal:
                 _formats.SelectedItem = 3;
                 break;
         }
@@ -289,10 +289,10 @@ public class SettingsDialog : Dialog {
         };
 
         switch (_inputSettings.Seperator) {
-            case HexSeperator.Space:
+            case HexSequenceSeperator.Space:
                 _seperators.SelectedItem = 0;
                 break;
-            case HexSeperator.Comma:
+            case HexSequenceSeperator.Comma:
                 _seperators.SelectedItem = 1;
                 break;
         }
@@ -368,16 +368,16 @@ public class SettingsDialog : Dialog {
     }
 
     private void CommitSelections() {
-        ResultSettings = new HexInputSettings {
+        ResultSettings = new HexSettings {
             InputFormat = _formats.SelectedItem switch {
-                0 => HexInputFormat.ZeroPrefixed,
-                1 => HexInputFormat.HPrefixed,
-                2 => HexInputFormat.NonPrefixed,
-                _ => HexInputFormat.Decimal
+                0 => HexFormat.ZeroPrefixed,
+                1 => HexFormat.HPrefixed,
+                2 => HexFormat.NonPrefixed,
+                _ => HexFormat.Decimal
             },
             Seperator = _seperators.SelectedItem switch {
-                0 => HexSeperator.Space,
-                _ => HexSeperator.Comma
+                0 => HexSequenceSeperator.Space,
+                _ => HexSequenceSeperator.Comma
             }
         };
     }

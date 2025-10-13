@@ -53,9 +53,9 @@ public sealed class TerminalPanel : IDisposable {
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
         if (_settings.HexInputSettings is null) {
-            _settings.HexInputSettings = new HexInputSettings() {
-                InputFormat = HexInputFormat.ZeroPrefixed,
-                Seperator = HexSeperator.Space
+            _settings.HexInputSettings = new HexSettings() {
+                InputFormat = HexFormat.ZeroPrefixed,
+                Seperator = HexSequenceSeperator.Space
             };
         }
         _writeLock = new();

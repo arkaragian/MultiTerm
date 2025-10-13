@@ -1,18 +1,6 @@
 namespace MultiTermCLI.Configuration;
 
-public enum HexInputFormat {
-    ZeroPrefixed,
-    HPrefixed,
-    NonPrefixed,
-    Decimal
-}
-
-public enum HexSeperator {
-    Space,
-    Comma
-}
-
-public class HexInputSettings {
-    public required HexInputFormat InputFormat { get; set; }
-    public required HexSeperator Seperator { get; set; }
+public class HexSettings {
+    public required HexFormat InputFormat { get; set; }
+    public required HexSequenceSeperator Seperator { get; set; }
 }
