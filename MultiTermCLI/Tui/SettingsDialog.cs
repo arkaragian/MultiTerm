@@ -5,8 +5,9 @@ namespace MultiTermCLI.Tui;
 
 public class SettingsDialog : Dialog {
 
-    private readonly TabView _tabView;
+    //private readonly View _frame;
     private readonly HexSettings _inputSettings;
+    //private readonly HexSettings _binary_display_settings;
 
     RadioGroup _formats;
     RadioGroup _seperators;
@@ -23,26 +24,48 @@ public class SettingsDialog : Dialog {
         ColorScheme = new ColorScheme {
             Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
             Focus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
-            HotNormal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
-            HotFocus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
             Disabled = new Terminal.Gui.Attribute(Color.Green, Color.Gray)
         };
 
-        _tabView = new() {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
+        View hex_input_settings = BuildHexSettingsTab();
+        View display_settings = BuildDisplayFormatsView();
+
+        display_settings.Y = Pos.Bottom(hex_input_settings);
+
+        _ = Add(hex_input_settings);
+        _ = Add(display_settings);
+
+
+        Button ok = new() {
+            Text = "OK",
+            X = Pos.AnchorEnd(offset: 20),
+            Y = Pos.AnchorEnd(offset: 10),
             CanFocus = true,
+            TabStop = TabBehavior.TabStop
         };
 
-        Tab hex_input_settings = BuildHexSettingsTab();
-        Tab display_settings = BuildDisplaySettingsTab();
+        ok.Accepting += (object? sender, CommandEventArgs args) => {
+            CommitSelections();
+            Accepted = true;
+            Application.RequestStop(this);
+        };
 
-        _tabView.AddTab(hex_input_settings, true);
-        _tabView.AddTab(display_settings, false);
+        Button cancel = new() {
+            Text = "Cancel",
+            X = Pos.AnchorEnd(offset: 12),
+            Y = Pos.AnchorEnd(offset: 10),
+            CanFocus = true,
+            //IsDefault = true,
+            TabStop = TabBehavior.TabStop
+        };
 
-        _ = Add(_tabView);
+        cancel.Accepting += (object? sender, CommandEventArgs args) => {
+            Accepted = false;
+            Application.RequestStop(this);
+        };
+
+        _ = Add(ok);
+        _ = Add(cancel);
 
         ResultSettings = new HexSettings() {
             InputFormat = HexFormat.ZeroPrefixed,
@@ -59,38 +82,28 @@ public class SettingsDialog : Dialog {
 
     }
 
-    private Tab BuildHexSettingsTab() {
+    private View BuildHexSettingsTab() {
 
-        Tab display_settings = new() {
-            DisplayText = "Hex Input Settings",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            CanFocus = true
-        };
-
-
-        View _format_container = BuildFormatsView();
-        View _seperator_container = BuildSeperatorView();
-        _seperator_container.Y = Pos.Bottom(_format_container);
 
         View _container = new() {
+            Title = "Hex Input Settings",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Height = Dim.Percent(35),
             CanFocus = true,
             TabStop = TabBehavior.NoStop
         };
 
+        View _format_container = BuildFormatsView();
+
         _ = _container.Add(_format_container);
-        _ = _container.Add(_seperator_container);
+
 
         TextView _example = new() {
             Title = "Hex Input Example",
             X = 0,
-            Y = Pos.Bottom(_seperator_container),
+            Y = Pos.Bottom(_format_container) + 1,
             Width = Dim.Fill(),
             Height = 1,
             ReadOnly = true,
@@ -104,125 +117,27 @@ public class SettingsDialog : Dialog {
         _ = _container.Add(_example);
 
 
-        Button ok = new() {
-            Text = "OK",
-            X = Pos.AnchorEnd(offset: 20),
-            Y = Pos.AnchorEnd(offset: 10),
-            CanFocus = true,
-            TabStop = TabBehavior.TabStop
-        };
-
-        ok.Accepting += (object? sender, CommandEventArgs args) => {
-            CommitSelections();
-            Accepted = true;
-            Application.RequestStop(this);
-        };
-
-        Button cancel = new() {
-            Text = "Cancel",
-            X = Pos.AnchorEnd(offset: 12),
-            Y = Pos.AnchorEnd(offset: 10),
-            CanFocus = true,
-            //IsDefault = true,
-            TabStop = TabBehavior.TabStop
-        };
-
-        cancel.Accepting += (object? sender, CommandEventArgs args) => {
-            Accepted = false;
-            Application.RequestStop(this);
-        };
-
-        _ = _container.Add(ok);
-        _ = _container.Add(cancel);
-
-
-        display_settings.View = _container;
 
         //display_settings.Add(_container);
-        return display_settings;
-
-    }
-
-    private Tab BuildDisplaySettingsTab() {
-
-        Tab display_settings = new() {
-            DisplayText = "Display Settings",
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            CanFocus = true
-        };
-
-
-        View _format_container = BuildDisplayFormatsView();
-
-        View _container = new() {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            CanFocus = true,
-            TabStop = TabBehavior.NoStop
-        };
-
-        _ = _container.Add(_format_container);
-
-        Button ok = new() {
-            Text = "OK",
-            X = Pos.AnchorEnd(offset: 20),
-            Y = Pos.AnchorEnd(offset: 10),
-            CanFocus = true,
-            TabStop = TabBehavior.TabStop
-        };
-
-        ok.Accepting += (object? sender, CommandEventArgs args) => {
-            CommitSelections();
-            Accepted = true;
-            Application.RequestStop(this);
-        };
-
-        Button cancel = new() {
-            Text = "Cancel",
-            X = Pos.AnchorEnd(offset: 12),
-            Y = Pos.AnchorEnd(offset: 10),
-            CanFocus = true,
-            //IsDefault = true,
-            TabStop = TabBehavior.TabStop
-        };
-
-        cancel.Accepting += (object? sender, CommandEventArgs args) => {
-            Accepted = false;
-            Application.RequestStop(this);
-        };
-
-        _ = _container.Add(ok);
-        _ = _container.Add(cancel);
-
-
-        display_settings.View = _container;
-
-        //display_settings.Add(_container);
-        return display_settings;
-
+        return _container;
 
     }
 
     private View BuildFormatsView() {
         View _format_container = new() {
+            Title = "Input Setting",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            //Height = Dim.Percent(50),
             Height = 8,
             BorderStyle = LineStyle.Single,
             CanFocus = true,
         };
 
-        Label _hex_format = new() {
-            Text = "Hex Format:",
+        Label _lbl = new() {
+            Text = "Hex Input Format",
             X = 0,
-            Y = 0,
+            Y = 0
         };
 
         _formats = new() {
@@ -233,7 +148,8 @@ public class SettingsDialog : Dialog {
                 "Decimal      : 171",
             ],
             X = 0,
-            Y = Pos.Bottom(_hex_format) + 1,
+            Y = Pos.Bottom(_lbl) + 1,
+            Width = Dim.Percent(50),
             CanFocus = true,
             TabStop = TabBehavior.TabStop
         };
@@ -253,8 +169,23 @@ public class SettingsDialog : Dialog {
                 break;
         }
 
-        _ = _format_container.Add(_hex_format);
+        _ = _format_container.Add(_lbl);
         _ = _format_container.Add(_formats);
+
+
+        Line vLine = new() {
+            X = Pos.Right(_formats),
+            Y = 0,
+            Height = 8,
+            Orientation = Orientation.Vertical
+        };
+
+        _ = _format_container.Add(vLine);
+
+        View _seperator_container = BuildSeperatorView();
+        _seperator_container.X = Pos.Right(vLine);
+
+        _ = _format_container.Add(_seperator_container);
 
         return _format_container;
     }
@@ -267,7 +198,6 @@ public class SettingsDialog : Dialog {
             //Y = Pos.Bottom(_format_container),
             Width = Dim.Fill(),
             Height = 6,
-            BorderStyle = LineStyle.Single,
             CanFocus = true,
         };
 
@@ -306,6 +236,7 @@ public class SettingsDialog : Dialog {
 
     private View BuildDisplayFormatsView() {
         View _format_container = new() {
+            Title = "Display Settings",
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -316,7 +247,7 @@ public class SettingsDialog : Dialog {
         };
 
         Label _hex_format = new() {
-            Text = "Display Format:",
+            Text = "Hex Display:",
             X = 0,
             Y = 0,
         };
@@ -335,33 +266,28 @@ public class SettingsDialog : Dialog {
             TabStop = TabBehavior.TabStop
         };
 
+
+        _ = _format_container.Add(_hex_format);
+        _ = _format_container.Add(_the_formats);
+
+        Line vLine = new() {
+            X = Pos.Right(_the_formats),
+            Y = 0,
+            Height = 8,
+            Orientation = Orientation.Vertical
+        };
+
         RadioGroup _ascii_settings = new() {
             RadioLabels = [
                 "Escape CRLF      : C",
             ],
-            X = 0,
-            Y = Pos.Bottom(_the_formats) + 1,
+            X = Pos.Right(vLine),
+            Y = 0,
             CanFocus = true,
             TabStop = TabBehavior.TabStop
         };
 
-        // switch (_inputSettings.InputFormat) {
-        //     case HexInputFormat.ZeroPrefixed:
-        //         _formats.SelectedItem = 0;
-        //         break;
-        //     case HexInputFormat.HPrefixed:
-        //         _formats.SelectedItem = 1;
-        //         break;
-        //     case HexInputFormat.NonPrefixed:
-        //         _formats.SelectedItem = 2;
-        //         break;
-        //     case HexInputFormat.Decimal:
-        //         _formats.SelectedItem = 3;
-        //         break;
-        // }
-
-        _ = _format_container.Add(_hex_format);
-        _ = _format_container.Add(_the_formats);
+        _ = _format_container.Add(vLine);
         _ = _format_container.Add(_ascii_settings);
 
         return _format_container;
