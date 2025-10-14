@@ -2,6 +2,7 @@ using libCommunication;
 using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
+using MultiTermCLI;
 using MultiTermCLI.Configuration;
 using MultiTermCLI.Tui.SettingsDialog;
 using System.Text;
@@ -182,12 +183,12 @@ public sealed class TerminalPanel : IDisposable {
                 }
                 SettingsDialog.SettingsDialog dialog = new(_settings.HexInputSettings.Clone(), _settings.HexDisplaySettings.Clone()) {
                     Title = _settings.Title + " Settings",
-                    //TabStop = TabBehavior.TabStop
                 };
                 Application.Run(dialog);
 
                 if (dialog.Accepted) {
-                    _settings.HexInputSettings = dialog.ResultSettings;
+                    _settings.HexInputSettings = dialog.ResultInputSettings;
+                    _settings.HexDisplaySettings = dialog.ResultDisplaySettings;
                     _input.InputSettings = _settings.HexInputSettings;
                     _ = MessageBox.Query("Confirm", "New Settings Applied", buttons: ["OK"]);
                 } else {
@@ -215,7 +216,12 @@ public sealed class TerminalPanel : IDisposable {
         while (!ct.IsCancellationRequested) {
             try {
                 (byte[] payload, _) = sink.Take(ct);
-                string text = Encoding.ASCII.GetString(payload);
+                string text;
+                if (_input.DisplayHex) {
+                    text = Payload.RenderPayload(payload, _settings.HexDisplaySettings);
+                } else {
+                    text = Encoding.ASCII.GetString(payload);
+                }
 
                 Application.Invoke(() => {
                     View.Text += text;

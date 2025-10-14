@@ -4,7 +4,7 @@ using Terminal.Gui;
 
 namespace MultiTermCLI.Tui.SettingsDialog;
 
-public class InputSettings : View {
+public class HexSettingsView : View {
 
     private readonly Dim _height = 12;
 
@@ -19,9 +19,7 @@ public class InputSettings : View {
     public RadioGroup Seperators { get; private set; }
     public HexSettings Settings { get; set; }
 
-    public InputSettings(HexSettings inputSettings) {
-
-        Title = "Input Setting";
+    public HexSettingsView(HexSettings inputSettings) {
         X = 0;
         Y = 0;
         Width = Dim.Fill();
@@ -33,7 +31,7 @@ public class InputSettings : View {
 
 
         Label _lbl = new() {
-            Text = "Hex Input Format:",
+            Text = "Hex Format:",
             X = 0,
             Y = 0
         };

@@ -5,9 +5,15 @@ using System.Text.RegularExpressions;
 
 namespace MultiTermCLI;
 
+/// <summary>
+/// Utility Functions to deal with payload conversion
+/// </summary>
 public static class Payload {
 
-
+    /// <summary>
+    /// Converts a payload received externally to text that can be displayed by the
+    /// application.
+    /// </summary>
     public static string RenderPayload(byte[]? payload, HexSettings settings) {
         if (payload is null) {
             return string.Empty;
@@ -16,6 +22,12 @@ public static class Payload {
         if (payload.Length is 0) {
             return string.Empty;
         }
+
+        char sep = settings.Seperator switch {
+            HexSequenceSeperator.Space => ' ',
+            HexSequenceSeperator.Comma => ',',
+            _ => ' '
+        };
 
         StringBuilder sb = new();
 
@@ -35,16 +47,10 @@ public static class Payload {
                 case HexFormat.Decimal:
                     _ = sb.Append(b.ToString(CultureInfo.InvariantCulture));
                     break;
-            };
-
-            switch (settings.Seperator) {
-                case HexSequenceSeperator.Space:
-                    _ = sb.Append(' ');
-                    break;
-                case HexSequenceSeperator.Comma:
-                    _ = sb.Append(',');
-                    break;
             }
+
+            sb.Append(sep);
+
         }
 
         _ = sb.Remove(sb.Length - 1, 1);

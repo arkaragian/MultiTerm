@@ -11,10 +11,11 @@ public class SettingsDialog : Dialog {
     //private readonly HexSettings _binary_display_settings;
 
     public bool Accepted { get; private set; }
-    public HexSettings ResultSettings { get; private set; }
+    public HexSettings ResultInputSettings { get; private set; }
+    public HexSettings ResultDisplaySettings { get; private set; }
 
-    private readonly InputSettings hex_input_settings;
-    private readonly DisplaySettings hex_display_settings;
+    private readonly HexSettingsView hex_input_settings;
+    private readonly HexSettingsView hex_display_settings;
 
     public SettingsDialog(HexSettings inputSettings, HexSettings displaySettings) : base() {
         //Title = "Settings";
@@ -30,8 +31,11 @@ public class SettingsDialog : Dialog {
             Disabled = new Terminal.Gui.Attribute(Color.Green, Color.Gray)
         };
 
-        hex_input_settings = new InputSettings(_inputSettings);
-        hex_display_settings = new DisplaySettings(_displaySettings) {
+        hex_input_settings = new HexSettingsView(_inputSettings) {
+            Title = "Hex Input Settings"
+        };
+        hex_display_settings = new HexSettingsView(_displaySettings) {
+            Title = "Hex Display Settings",
             Y = Pos.Bottom(hex_input_settings)
         };
 
@@ -70,14 +74,19 @@ public class SettingsDialog : Dialog {
         // _ = Add(ok);
         // _ = Add(cancel);
         //
-        Width = Dim.Percent(50);
-        Height = Dim.Percent(46);
+        // Width = Dim.Percent(50);
+        // Height = Dim.Percent(46);
 
         AddButton(ok);
         AddButton(cancel);
 
 
-        ResultSettings = new HexSettings() {
+        ResultInputSettings = new HexSettings() {
+            InputFormat = HexFormat.ZeroPrefixed,
+            Seperator = HexSequenceSeperator.Space,
+        };
+
+        ResultDisplaySettings = new HexSettings() {
             InputFormat = HexFormat.ZeroPrefixed,
             Seperator = HexSequenceSeperator.Space,
         };
@@ -92,10 +101,8 @@ public class SettingsDialog : Dialog {
 
     }
 
-
-
-
     private void CommitSelections() {
-        ResultSettings = hex_input_settings.Settings.Clone();
+        ResultInputSettings = hex_input_settings.Settings.Clone();
+        ResultDisplaySettings = hex_display_settings.Settings.Clone();
     }
 }

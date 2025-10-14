@@ -13,6 +13,7 @@ public sealed class TerminalInputLine : IDisposable {
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
     private readonly CheckBox _sendHEX;
+    private readonly CheckBox _displayHex;
 
     public Pos X {
         get => View.X;
@@ -59,13 +60,20 @@ public sealed class TerminalInputLine : IDisposable {
         set => View.TabStop = value;
     }
 
+    public bool DisplayHex => _displayHex.CheckedState == CheckState.Checked;
+
     //public event Action<Key>? KeyDown;
     public event EventHandler<Key>? KeyDown;
 
     public HexSettings InputSettings { get; set; }
 
+    private List<string> _history;
+    int _history_index = -1;
+
     public TerminalInputLine(HexSettings settings) {
         InputSettings = settings;
+
+        _history = new();
 
         View = new View() {
             X = 0,
@@ -78,7 +86,7 @@ public sealed class TerminalInputLine : IDisposable {
         Input = new TextField() {
             X = 0,
             Y = 0,
-            Width = Dim.Fill(19), // reserve room for " CR  LF HEX"
+            Width = Dim.Fill(margin: 35), // reserve room for " CR  LF HEX"
             Height = 1,
             ReadOnly = false,
             CanFocus = true,
@@ -100,8 +108,15 @@ public sealed class TerminalInputLine : IDisposable {
         };
 
         _sendHEX = new CheckBox() {
-            Text = "HEX",
+            Text = "Send HEX",
             X = Pos.Right(_sendLF) + 1,
+            Y = 0,
+            TabStop = TabBehavior.TabStop
+        };
+
+        _displayHex = new CheckBox() {
+            Text = "Display HEX",
+            X = Pos.Right(_sendHEX) + 1,
             Y = 0,
             TabStop = TabBehavior.TabStop
         };
@@ -110,87 +125,87 @@ public sealed class TerminalInputLine : IDisposable {
         _ = View.Add(_sendCR);
         _ = View.Add(_sendLF);
         _ = View.Add(_sendHEX);
+        _ = View.Add(_displayHex);
 
         // Capture key presses on the frame
         Input.KeyDown += (sender, e) => {
             KeyDown?.Invoke(sender, e);
         };
+
+
+        Input.KeyDown += (object? sender, Key e) => {
+            if (e == Key.CursorUp) {
+
+                if (_history_index < 0) {
+                    _history_index = 0;
+                }
+
+                if (_history.Count is 0) {
+                    e.Handled = true;
+                    return;
+                }
+
+                Input.Text = _history[_history_index];
+                //We decrement the index after providing the completion
+                _history_index--;
+
+                e.Handled = true;
+                return;
+            }
+
+            if (e == Key.CursorDown) {
+                _history_index--;
+                if (_history_index < 0) {
+                    _history_index = 0;
+                    e.Handled = true;
+                }
+
+                if (_history_index > _history.Count - 1) {
+                    Input.Text = _history.Last();
+                    _history_index = _history.Count - 1;
+                } else {
+                    Input.Text = _history[_history_index];
+                }
+
+                e.Handled = true;
+                return;
+
+            }
+        };
     }
 
     public byte[]? BuildPayload() {
 
-        if (_sendHEX.CheckedState is CheckState.Checked) {
-            List<byte> result = [];
-
-            string? s = Input.Text?.ToString();
-            if (s is null) {
-                return null;
-            }
-            //TODO: Validation
-            //
-            char sep = InputSettings.Seperator switch {
-                HexSequenceSeperator.Space => ' ',
-                HexSequenceSeperator.Comma => ',',
-                _ => throw new NotImplementedException(),
-            };
-
-            string regex = InputSettings.InputFormat switch {
-                HexFormat.ZeroPrefixed => @"^0x[0-9A-Fa-f]{2}$",
-                HexFormat.HPrefixed => @"^h[0-9A-Fa-f]{2}$",
-                HexFormat.NonPrefixed => @"^[0-9A-Fa-f]{2}$",
-                HexFormat.Decimal => @"^(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})$",
-                _ => throw new NotImplementedException(),
-            };
-
-            Regex rgo = new(regex);
-
-            string[] string_bytes = s.Split(sep);
-
-            foreach (string sb in string_bytes) {
-                bool ok = rgo.IsMatch(sb);
-                if (!ok) {
-                    return null;
-                }
-
-                byte value = InputSettings.InputFormat switch {
-                    HexFormat.ZeroPrefixed => Convert.ToByte(sb[2..], 16),
-                    HexFormat.HPrefixed => Convert.ToByte(sb[1..], 16),
-                    HexFormat.NonPrefixed => Convert.ToByte(sb, 16),
-                    HexFormat.Decimal => byte.Parse(sb, CultureInfo.InvariantCulture),
-                    _ => throw new NotImplementedException(),
-                };
-                result.Add(value);
-            }
-
-
-            if (_sendCR.CheckedState is CheckState.Checked) {
-                result.Add((byte)'\r');
-            }
-            if (_sendLF.CheckedState is CheckState.Checked) {
-                result.Add((byte)'\n');
-            }
-
-            Input.Text = "";
-            return [.. result];
-
-        } else {
-
-            string? s = Input.Text?.ToString();
-            if (s is null) {
-                return [];
-            }
-
-            if (_sendCR.CheckedState is CheckState.Checked) {
-                s += (byte)'\r';
-            }
-            if (_sendLF.CheckedState is CheckState.Checked) {
-                s += (byte)'\n';
-            }
-
-            Input.Text = "";
-            return Encoding.ASCII.GetBytes(s);
+        string? s = Input.Text?.ToString();
+        if (s is null) {
+            return null;
         }
 
+        if (s is "") {
+            return null;
+        }
+
+        if (_history.Count is 0) {
+            _history.Add(s);
+            _history_index++;
+        } else {
+            string prev = _history.Last();
+            bool areDifferent = !s.Equals(prev, StringComparison.Ordinal);
+
+            if (areDifferent) {
+                _history.Add(s);
+                _history_index++;
+            }
+        }
+
+        bool asHex = _sendHEX.CheckedState is CheckState.Checked;
+        bool sendCR = _sendCR.CheckedState is CheckState.Checked;
+        bool sendLF = _sendLF.CheckedState is CheckState.Checked;
+        byte[] result = Payload.BuildPayload(s, asHex, InputSettings, sendCR, sendLF);
+
+        Input.Text = "";
+
+        return result;
     }
 
     public void Dispose() {
