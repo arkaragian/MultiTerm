@@ -1,4 +1,3 @@
-using libCommunication.Configuration;
 using MultiTermCLI.Configuration;
 using Terminal.Gui;
 
@@ -8,7 +7,7 @@ public class MainTUIWindow : Window {
     private readonly Dictionary<string, TerminalPanel> _terminals;
 
     public MainTUIWindow() {
-        Title = $"MultiTermCLI ({Application.QuitKey} to quit)";
+        Title = $"MultiTermCLI ({Application.QuitKey} to quit) (F1 for settings)";
         _terminals = [];
     }
 

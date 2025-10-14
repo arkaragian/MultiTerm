@@ -3,6 +3,7 @@ using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
 using MultiTermCLI.Configuration;
+using MultiTermCLI.Tui.SettingsDialog;
 using System.Text;
 using Terminal.Gui;
 
@@ -54,6 +55,13 @@ public sealed class TerminalPanel : IDisposable {
         _settings = settings;
         if (_settings.HexInputSettings is null) {
             _settings.HexInputSettings = new HexSettings() {
+                InputFormat = HexFormat.ZeroPrefixed,
+                Seperator = HexSequenceSeperator.Space
+            };
+        }
+
+        if (_settings.HexDisplaySettings is null) {
+            _settings.HexDisplaySettings = new HexSettings() {
                 InputFormat = HexFormat.ZeroPrefixed,
                 Seperator = HexSequenceSeperator.Space
             };
@@ -172,7 +180,7 @@ public sealed class TerminalPanel : IDisposable {
                 if (_settings.HexInputSettings is null) {
                     throw new InvalidOperationException("Null hex input settings!");
                 }
-                SettingsDialog dialog = new(_settings.HexInputSettings) {
+                SettingsDialog.SettingsDialog dialog = new(_settings.HexInputSettings.Clone(), _settings.HexDisplaySettings.Clone()) {
                     Title = _settings.Title + " Settings",
                     //TabStop = TabBehavior.TabStop
                 };

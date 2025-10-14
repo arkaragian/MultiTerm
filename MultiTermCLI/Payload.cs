@@ -6,6 +6,54 @@ using System.Text.RegularExpressions;
 namespace MultiTermCLI;
 
 public static class Payload {
+
+
+    public static string RenderPayload(byte[]? payload, HexSettings settings) {
+        if (payload is null) {
+            return string.Empty;
+        }
+
+        if (payload.Length is 0) {
+            return string.Empty;
+        }
+
+        StringBuilder sb = new();
+
+        foreach (byte b in payload) {
+            switch (settings.InputFormat) {
+                case HexFormat.ZeroPrefixed:
+                    _ = sb.Append("0x");
+                    _ = sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
+                    break;
+                case HexFormat.HPrefixed:
+                    _ = sb.Append('h');
+                    _ = sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
+                    break;
+                case HexFormat.NonPrefixed:
+                    _ = sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
+                    break;
+                case HexFormat.Decimal:
+                    _ = sb.Append(b.ToString(CultureInfo.InvariantCulture));
+                    break;
+            };
+
+            switch (settings.Seperator) {
+                case HexSequenceSeperator.Space:
+                    _ = sb.Append(' ');
+                    break;
+                case HexSequenceSeperator.Comma:
+                    _ = sb.Append(',');
+                    break;
+            }
+        }
+
+        _ = sb.Remove(sb.Length - 1, 1);
+
+
+
+        return sb.ToString();
+    }
+
     public static byte[]? BuildPayload(string? input, bool asHex, HexSettings settings, bool sendCR, bool sendLF) {
 
         if (input is null) {
