@@ -55,8 +55,6 @@ public static class Payload {
 
         _ = sb.Remove(sb.Length - 1, 1);
 
-
-
         return sb.ToString();
     }
 

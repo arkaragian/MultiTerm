@@ -65,7 +65,16 @@ public class Program {
             // top.Add(w);
 
 
-            _ = top.Add(new MainTUIWindow(settings));
+            // MultiTermMenu mn = new();
+            //
+            // _ = top.Add(mn);
+
+            MainTUIWindow win = new MainTUIWindow(settings) {
+                //Y = Pos.Bottom(mn)
+            };
+
+            _ = top.Add(win);
+
             Application.Run(top);
             top.Dispose();
         } finally {

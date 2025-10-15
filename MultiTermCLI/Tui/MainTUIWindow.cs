@@ -38,11 +38,14 @@ public class MainTUIWindow : Window {
                     Y = r == 0 ? 0 : Pos.Percent(50),
                     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
                     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50),
-                    TabStop = TabBehavior.TabGroup
+                    TabStop = TabBehavior.TabGroup,
+                    //TabStop = TabBehavior.TabStop,
+                    CanFocus = true,
+                    ColorScheme = ColorScheme
                 };
 
                 //_ = frame.Add(panel.Frame);
-                _ = Add(panel.Frame);
+                _ = Add(panel);
 
                 _terminals.Add(t.Title, panel);
 
@@ -52,6 +55,7 @@ public class MainTUIWindow : Window {
             }
         }
         firstPanel?.FocusInput();
+
 
     }
 

@@ -10,7 +10,8 @@ using Terminal.Gui;
 
 namespace MultiTermCLI.Tui;
 
-public sealed class TerminalPanel : IDisposable {
+//public sealed class TerminalPanel : IDisposable {
+public sealed class TerminalPanel : View {
 
     private readonly TerminalConfiguration _settings;
     private readonly CancellationTokenSource _cts;
@@ -20,37 +21,10 @@ public sealed class TerminalPanel : IDisposable {
 
     private bool _disposed;
 
-    public View Frame { get; }
+    // public View Frame { get; }
     public TextView View { get; }
 
     private readonly TerminalInputLine _input;
-
-    private readonly Lock _writeLock;
-
-    public Pos X {
-        get => Frame.X;
-        set => Frame.X = value;
-    }
-
-    public Pos Y {
-        get => Frame.Y;
-        set => Frame.Y = value;
-    }
-
-    public Dim? Width {
-        get => Frame.Width;
-        set => Frame.Width = value;
-    }
-
-    public Dim? Height {
-        get => Frame.Height;
-        set => Frame.Height = value;
-    }
-
-    public TabBehavior? TabStop {
-        get => Frame.TabStop;
-        set => Frame.TabStop = value;
-    }
 
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
@@ -67,7 +41,6 @@ public sealed class TerminalPanel : IDisposable {
                 Seperator = HexSequenceSeperator.Space
             };
         }
-        _writeLock = new();
 
         if (!_settings.IsValidSetting()) {
             throw new InvalidOperationException("Settings are not valid");
@@ -75,15 +48,12 @@ public sealed class TerminalPanel : IDisposable {
 
         int _input_height = 3;
 
+        X = 0;
+        Y = 0;
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+        CanFocus = true;
 
-        Frame = new View() {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            CanFocus = true,
-            //TabStop = TabBehavior.TabStop
-        };
 
         View = new TextView() {
             Title = _settings.Title,
@@ -110,8 +80,8 @@ public sealed class TerminalPanel : IDisposable {
             TabStop = TabBehavior.TabStop
         };
 
-        _ = Frame.Add(View);
-        _ = Frame.Add(_input.View);
+        _ = Add(View);
+        _ = Add(_input);
 
         Serial? port = null;
         CommTCPClient? client = null;
@@ -176,7 +146,7 @@ public sealed class TerminalPanel : IDisposable {
             }
         };
 
-        Frame.KeyDown += (object? sender, Key e) => {
+        this.KeyDown += (object? sender, Key e) => {
             if (e == Key.F1) {
                 if (_settings.HexInputSettings is null) {
                     throw new InvalidOperationException("Null hex input settings!");
@@ -218,8 +188,9 @@ public sealed class TerminalPanel : IDisposable {
                 (byte[] payload, _) = sink.Take(ct);
                 string text;
                 if (_input.DisplayHex) {
-                    text = Payload.RenderPayload(payload, _settings.HexDisplaySettings);
+                    text = Payload.RenderPayload(payload, _settings.HexDisplaySettings!);
                 } else {
+                    //TODO: Escape CR LF here
                     text = Encoding.ASCII.GetString(payload);
                 }
 

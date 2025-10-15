@@ -6,64 +6,14 @@ using Terminal.Gui;
 
 namespace MultiTermCLI.Tui;
 
-public sealed class TerminalInputLine : IDisposable {
-    public View View { get; }
+public sealed class TerminalInputLine : View {
     public TextField Input { get; }
-
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
     private readonly CheckBox _sendHEX;
     private readonly CheckBox _displayHex;
 
-    public Pos X {
-        get => View.X;
-        set => View.X = value;
-    }
-
-    public Pos Y {
-        get => View.Y;
-        set => View.Y = value;
-    }
-
-    public Dim? Width {
-        get => View.Width;
-        set => View.Width = value;
-    }
-
-    public Dim? Height {
-        get => View.Height;
-        set => View.Height = value;
-    }
-
-    public string Title {
-        get => View.Title;
-        set => View.Title = value;
-    }
-
-    public string Text {
-        get => Input.Text;
-        set => Input.Text = value;
-    }
-
-    public LineStyle BorderStyle {
-        get => View.BorderStyle;
-        set => View.BorderStyle = value;
-    }
-
-    public ColorScheme? ColorScheme {
-        get => View.ColorScheme;
-        set => View.ColorScheme = value;
-    }
-
-    public TabBehavior? TabStop {
-        get => View.TabStop;
-        set => View.TabStop = value;
-    }
-
     public bool DisplayHex => _displayHex.CheckedState == CheckState.Checked;
-
-    //public event Action<Key>? KeyDown;
-    public event EventHandler<Key>? KeyDown;
 
     public HexSettings InputSettings { get; set; }
 
@@ -75,13 +25,11 @@ public sealed class TerminalInputLine : IDisposable {
 
         _history = new();
 
-        View = new View() {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = 1,
-            CanFocus = true,
-        };
+        X = 0;
+        Y = 0;
+        Width = Dim.Fill();
+        Height = 1;
+        CanFocus = true;
 
         Input = new TextField() {
             X = 0,
@@ -121,16 +69,11 @@ public sealed class TerminalInputLine : IDisposable {
             TabStop = TabBehavior.TabStop
         };
 
-        _ = View.Add(Input);
-        _ = View.Add(_sendCR);
-        _ = View.Add(_sendLF);
-        _ = View.Add(_sendHEX);
-        _ = View.Add(_displayHex);
-
-        // Capture key presses on the frame
-        Input.KeyDown += (sender, e) => {
-            KeyDown?.Invoke(sender, e);
-        };
+        _ = Add(Input);
+        _ = Add(_sendCR);
+        _ = Add(_sendLF);
+        _ = Add(_sendHEX);
+        _ = Add(_displayHex);
 
 
         Input.KeyDown += (object? sender, Key e) => {
@@ -206,12 +149,5 @@ public sealed class TerminalInputLine : IDisposable {
         Input.Text = "";
 
         return result;
-    }
-
-    public void Dispose() {
-        _sendLF?.Dispose();
-        _sendCR?.Dispose();
-        Input?.Dispose();
-        View?.Dispose();
     }
 }
