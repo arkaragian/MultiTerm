@@ -1,4 +1,5 @@
-using MultiTermCLI.Configuration;
+using libMultiTerm;
+using libMultiTerm.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using Terminal.Gui;
 

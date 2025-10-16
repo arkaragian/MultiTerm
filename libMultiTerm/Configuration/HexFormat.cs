@@ -1,4 +1,4 @@
-namespace MultiTermCLI.Configuration;
+namespace libMultiTerm.Configuration;
 
 public enum HexFormat {
     ZeroPrefixed,

@@ -1,12 +1,12 @@
+using libMultiTerm.Configuration;
 using libCommunication;
 using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
-using MultiTermCLI;
-using MultiTermCLI.Configuration;
-using MultiTermCLI.Tui.SettingsDialog;
 using System.Text;
 using Terminal.Gui;
+using libCommunication.Serial;
+using libMultiTerm;
 
 namespace MultiTermCLI.Tui;
 

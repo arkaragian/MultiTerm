@@ -1,6 +1,6 @@
 using libCommunication.Configuration;
 
-namespace MultiTermCLI.Configuration;
+namespace libMultiTerm.Configuration;
 
 public class TerminalConfiguration {
     public required ConnectionType ConnectionType { get; set; }

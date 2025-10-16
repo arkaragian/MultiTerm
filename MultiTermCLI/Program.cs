@@ -1,4 +1,4 @@
-﻿using MultiTermCLI.Configuration;
+﻿using libMultiTerm.Configuration;
 using MultiTermCLI.Tui;
 using System.Text.Json;
 using System.Text.Json.Serialization;

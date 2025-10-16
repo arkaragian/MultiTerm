@@ -1,4 +1,4 @@
-namespace MultiTermCLI.Configuration;
+namespace libMultiTerm.Configuration;
 
 public class HexSettings {
     public required HexFormat InputFormat { get; set; }

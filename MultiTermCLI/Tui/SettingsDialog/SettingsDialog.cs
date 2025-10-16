@@ -1,4 +1,4 @@
-using MultiTermCLI.Configuration;
+using libMultiTerm.Configuration;
 using Terminal.Gui;
 
 namespace MultiTermCLI.Tui.SettingsDialog;

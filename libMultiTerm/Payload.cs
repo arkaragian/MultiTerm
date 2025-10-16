@@ -1,9 +1,9 @@
-using MultiTermCLI.Configuration;
+using libMultiTerm.Configuration;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MultiTermCLI;
+namespace libMultiTerm;
 
 /// <summary>
 /// Utility Functions to deal with payload conversion

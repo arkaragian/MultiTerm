@@ -1,7 +1,5 @@
-using MultiTermCLI.Configuration;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
+using libMultiTerm;
+using libMultiTerm.Configuration;
 using Terminal.Gui;
 
 namespace MultiTermCLI.Tui;
