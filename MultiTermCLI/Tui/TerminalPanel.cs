@@ -7,6 +7,7 @@ using System.Text;
 using Terminal.Gui;
 using libCommunication.Serial;
 using libMultiTerm;
+using libMultiTerm.Plugin;
 
 namespace MultiTermCLI.Tui;
 
@@ -25,6 +26,8 @@ public sealed class TerminalPanel : View {
     public TextView View { get; }
 
     private readonly TerminalInputLine _input;
+
+    private Dictionary<string, Func<byte[]>>? _pluginFunctions;
 
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
@@ -165,6 +168,26 @@ public sealed class TerminalPanel : View {
                     _ = MessageBox.Query("Confirm", "No Settings Applied", buttons: ["OK"]);
                 }
                 e.Handled = true;
+                return;
+            }
+
+            if (e == Key.F2) {
+                OpenDialog opendlg = new();
+                Application.Run(opendlg);
+                if(opendlg.FilePaths.Count() > 0) {
+                    var a = PluginLoader.LoadPlugin(opendlg.FilePaths[0]);
+                    foreach(var b in a) {
+                        Application.Invoke(() => {
+                            View.Text += $"Plugin {b.Key}";
+                            View.MoveEnd(); // optional: scrolls to bottom
+                        });
+                    }
+                    _pluginFunctions = a;
+                }
+            }
+
+            if (e == Key.F3) {
+                //TODO: Implement Command Selection Dialog
             }
         };
 
