@@ -188,6 +188,10 @@ public sealed class TerminalPanel : View {
 
             if (e == Key.F3) {
                 //TODO: Implement Command Selection Dialog
+                PayloadSelectionDialog.PayloadSelectionDialog  psld = new() {
+                    ColorScheme = ColorScheme
+                };
+                Application.Run(psld);
             }
         };
 
