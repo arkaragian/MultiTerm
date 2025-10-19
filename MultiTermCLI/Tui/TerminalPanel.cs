@@ -49,7 +49,7 @@ public sealed class TerminalPanel : View {
             throw new InvalidOperationException("Settings are not valid");
         }
 
-        int _input_height = 3;
+        int _input_height = 4;
 
         X = 0;
         Y = 0;
@@ -234,10 +234,8 @@ public sealed class TerminalPanel : View {
                 (byte[] payload, _) = sink.Take(ct);
                 string text;
                 if (_input.DisplayHex) {
-                    Console.WriteLine("Rendering Hex");
                     text = Payload.RenderPayload(payload, _settings.HexDisplaySettings!);
                 } else {
-                    Console.WriteLine("Rendering String");
                     text = Payload.RenderStringPayload(payload);
                 }
 

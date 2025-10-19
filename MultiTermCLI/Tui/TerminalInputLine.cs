@@ -8,10 +8,18 @@ public sealed class TerminalInputLine : View {
     public TextField Input { get; }
     private readonly CheckBox _sendCR;
     private readonly CheckBox _sendLF;
-    private readonly CheckBox _sendHEX;
-    private readonly CheckBox _displayHex;
+    // private readonly CheckBox _sendHEX;
+    // private readonly CheckBox _displayHex;
 
-    public bool DisplayHex => _displayHex.CheckedState == CheckState.Checked;
+    private readonly RadioGroup _sendStyle;
+    private readonly RadioGroup _displayStyle;
+
+    //public bool DisplayHex => _displayHex.CheckedState == CheckState.Checked;
+    public bool SendHex    => _sendStyle.SelectedItem is 0;
+    public bool SendText => _sendStyle.SelectedItem is 1;
+
+    public bool DisplayHex => _displayStyle.SelectedItem is 0;
+    public bool DisplayText => _displayStyle.SelectedItem is 1;
 
     public HexSettings InputSettings { get; set; }
 
@@ -28,7 +36,7 @@ public sealed class TerminalInputLine : View {
         X = 0;
         Y = 0;
         Width = Dim.Fill();
-        Height = 1;
+        Height = 4;
         CanFocus = true;
 
         Input = new TextField() {
@@ -50,30 +58,54 @@ public sealed class TerminalInputLine : View {
 
         _sendLF = new CheckBox() {
             Text = "LF",
-            X = Pos.Right(_sendCR) + 1,
-            Y = 0,
+            X = Pos.Right(Input) + 1,
+            Y = 1,
             TabStop = TabBehavior.TabStop
         };
 
-        _sendHEX = new CheckBox() {
-            Text = "Send HEX",
-            X = Pos.Right(_sendLF) + 1,
+        // _sendHEX = new CheckBox() {
+        //     Text = "Send HEX",
+        //     X = Pos.Right(_sendLF) + 1,
+        //     Y = 0,
+        //     TabStop = TabBehavior.TabStop
+        // };
+        //
+        // _displayHex = new CheckBox() {
+        //     Text = "Display HEX",
+        //     X = Pos.Right(_sendHEX) + 1,
+        //     Y = 0,
+        //     TabStop = TabBehavior.TabStop
+        // };
+
+        _sendStyle = new RadioGroup() {
+            RadioLabels = [
+                "Send Hex",
+                "Send Text"
+            ],
+            X = Pos.Right(_sendCR) + 2,
             Y = 0,
+            CanFocus = true,
             TabStop = TabBehavior.TabStop
         };
 
-        _displayHex = new CheckBox() {
-            Text = "Display HEX",
-            X = Pos.Right(_sendHEX) + 1,
+        _displayStyle = new RadioGroup() {
+            RadioLabels = [
+                "Display Hex",
+                "Display Text"
+            ],
+            X = Pos.Right(_sendStyle) + 2,
             Y = 0,
+            CanFocus = true,
             TabStop = TabBehavior.TabStop
         };
 
         _ = Add(Input);
         _ = Add(_sendCR);
         _ = Add(_sendLF);
-        _ = Add(_sendHEX);
-        _ = Add(_displayHex);
+        // _ = Add(_sendHEX);
+        // _ = Add(_displayHex);
+        _ = Add(_sendStyle);
+        _ = Add(_displayStyle);
 
 
         Input.KeyDown += (object? sender, Key e) => {
@@ -113,10 +145,10 @@ public sealed class TerminalInputLine : View {
 
         _history_provider.AddItem(s);
 
-        bool asHex = _sendHEX.CheckedState is CheckState.Checked;
+        //bool asHex = _sendHEX.CheckedState is CheckState.Checked;
         bool sendCR = _sendCR.CheckedState is CheckState.Checked;
         bool sendLF = _sendLF.CheckedState is CheckState.Checked;
-        byte[]? result = Payload.BuildPayload(s, asHex, InputSettings, sendCR, sendLF);
+        byte[]? result = Payload.BuildPayload(s, SendHex, InputSettings, sendCR, sendLF);
 
         if(result is null) {
             return null;

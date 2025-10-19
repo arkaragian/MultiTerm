@@ -150,7 +150,7 @@ public class HexSettingsView : View {
             Y = 0,
         };
 
-        Seperators = new() {
+        Seperators = new RadioGroup() {
             RadioLabels = [
                 "Space",
                 "Comma"
