@@ -16,4 +16,10 @@
     <PackageReference Include="Terminal.Gui" Version="2.0.0-alpha.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="sample_configuration.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -47,41 +47,38 @@ public class Program {
 
         Application.Init();                         // set raw mode, alt screen, colors
         Application.Navigation.AdvanceFocus(NavigationDirection.Forward, TabBehavior.TabStop);
-        try {
-            // optional: make Ctrl+C quit
-            Console.TreatControlCAsInput = false;
-            Application.QuitKey = Key.C.WithCtrl;   // maps to Command.Quit
-            // or also wire SIGINT:
+        // optional: make Ctrl+C quit
+        Console.TreatControlCAsInput = false;
+        Application.QuitKey = Key.C.WithCtrl;   // maps to Command.Quit
+                                                // or also wire SIGINT:
 
 
-            Toplevel top = new();
-            Console.CancelKeyPress += (_, e) => {
-                e.Cancel = true;
-                Application.RequestStop(top);
-            };
+        Toplevel top = new();
+        Console.CancelKeyPress += (_, e) => {
+            e.Cancel = true;
+            Application.RequestStop(top);
+        };
 
-            // Window w = new Terminal.Gui.Window { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
-            // w.Add(new Label() { X = 2, Y = 1, Title = "Hello From Terminal" });
-            // top.Add(w);
+        // Window w = new Terminal.Gui.Window { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        // w.Add(new Label() { X = 2, Y = 1, Title = "Hello From Terminal" });
+        // top.Add(w);
 
 
-            // MultiTermMenu mn = new();
-            //
-            // _ = top.Add(mn);
+        // MultiTermMenu mn = new();
+        //
+        // _ = top.Add(mn);
 
-            MainTUIWindow win = new MainTUIWindow(settings) {
-                //Y = Pos.Bottom(mn)
-            };
+        MainTUIWindow win = new MainTUIWindow(settings) {
+            //Y = Pos.Bottom(mn)
+        };
 
-            _ = top.Add(win);
+        _ = top.Add(win);
 
-            Application.Run(top);
-            top.Dispose();
-        } finally {
-            Application.Shutdown();                 // restore terminal
-            //ConsoleVT.Restore();
-            // Safety reset for alt screen, attributes, and cursor visibility.
-        }
+        Application.Run(top);
+        top.Dispose();
+        Application.Shutdown();                 // restore terminal
+                                                //ConsoleVT.Restore();
+                                                // Safety reset for alt screen, attributes, and cursor visibility.
 
 
 

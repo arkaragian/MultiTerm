@@ -4,16 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using libMultiTerm.Plugin.Models;
 
 namespace libMultiTerm.Plugin;
 
-public static class PluginLoader {
-    public static Dictionary<string, Func<byte[]>>? LoadPlugin(string path) {
+public class PluginLoader {
+
+    public List<UserDefinedPayload>? Payloads {get; private set;}
+
+    public Exception? LoadPlugin(string path) {
         string full = Path.GetFullPath(path);
         AssemblyLoadContext ctx = new AssemblyLoadContext("MutiTermPlugin", isCollectible: false);
         Assembly assy = ctx.LoadFromAssemblyPath(full);
 
-        Dictionary<string, Func<byte[]>> map = new();
+        Payloads = new List<UserDefinedPayload>();
 
         Type[] assembly_types = assy.GetTypes();
 
@@ -65,11 +69,21 @@ public static class PluginLoader {
                     // the_delegate = (Func<byte[]>)d;
                 }
 
-                string key = t.FullName + "." + m.Name;
-                map[key] = the_delegate;
+                DeviceCommandAttribute? attr = m.GetCustomAttribute<DeviceCommandAttribute>(false);
+                string attributeName = attr!.Name;
+
+                UserDefinedPayload udp = new() {
+                    Name = attributeName,
+                    Delegate = the_delegate,
+                };
+                Payloads.Add(udp);
+
+                //map[key] = the_delegate;
             }
         }
 
-        return map;
+        //UserDefinedPayloads = map;
+
+        return null;
     }
 }

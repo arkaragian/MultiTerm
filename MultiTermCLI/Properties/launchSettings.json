@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MultiTermCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "sample_configuration.json"
+    }
+  }
+}

@@ -19,6 +19,7 @@ public sealed class TerminalPanel : View {
     private readonly IReadThread _read_thread;
     private readonly IWriteThread _write_thread;
     private readonly Thread _terminalLoop;
+    private readonly PluginLoader _plugin_loader;
 
     private bool _disposed;
 
@@ -27,7 +28,7 @@ public sealed class TerminalPanel : View {
 
     private readonly TerminalInputLine _input;
 
-    private Dictionary<string, Func<byte[]>>? _pluginFunctions;
+    //private Dictionary<string, Func<byte[]>>? _pluginFunctions;
 
     public TerminalPanel(TerminalConfiguration settings) {
         _settings = settings;
@@ -128,6 +129,8 @@ public sealed class TerminalPanel : View {
         }
 
 
+        _plugin_loader = new PluginLoader();
+
         _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
                 byte[]? text = _input.BuildPayload();
@@ -174,24 +177,52 @@ public sealed class TerminalPanel : View {
             if (e == Key.F2) {
                 OpenDialog opendlg = new();
                 Application.Run(opendlg);
-                if(opendlg.FilePaths.Count() > 0) {
-                    var a = PluginLoader.LoadPlugin(opendlg.FilePaths[0]);
-                    foreach(var b in a) {
-                        Application.Invoke(() => {
-                            View.Text += $"Plugin {b.Key}";
-                            View.MoveEnd(); // optional: scrolls to bottom
-                        });
+                if (opendlg.FilePaths.Count() > 0) {
+                    Exception? ex = _plugin_loader.LoadPlugin(opendlg.FilePaths[0]);
+
+                    if (ex is not null) {
+                        return;
+                        _ = MessageBox.ErrorQuery("Error", $"No Plugin Loaded: {ex.Message}", buttons: ["OK"]);
+                        e.Handled = true;
+                        return;
                     }
-                    _pluginFunctions = a;
+
+                    // foreach (var b in a) {
+                    //     Application.Invoke(() => {
+                    //         View.Text += $"Plugin {b.Key}";
+                    //         View.MoveEnd(); // optional: scrolls to bottom
+                    //     });
+                    // }
+                    // _pluginFunctions = a;
                 }
+
+                e.Handled = true;
+                return;
             }
 
             if (e == Key.F3) {
-                //TODO: Implement Command Selection Dialog
-                PayloadSelectionDialog.PayloadSelectionDialog  psld = new() {
+                if (_plugin_loader.Payloads is null) {
+                    _ = MessageBox.ErrorQuery("Error", "No Plugin Loaded", buttons: ["OK"]);
+                    e.Handled = true;
+                    return;
+                }
+                PayloadSelectionDialog.PayloadSelectionDialog psld = new(_plugin_loader.Payloads) {
                     ColorScheme = ColorScheme
                 };
                 Application.Run(psld);
+                if (psld.SelectedPayload is not null) {
+                    string str = Payload.RenderPayload(psld.SelectedPayload, _settings.HexInputSettings);
+
+                    Application.Invoke(() => {
+                        if (str is "") {
+                            _input.Input.Text = "No String Produced";
+                        } else {
+                            _input.Input.Text = str;
+                        }
+                    });
+                }
+                e.Handled = true;
+                return;
             }
         };
 

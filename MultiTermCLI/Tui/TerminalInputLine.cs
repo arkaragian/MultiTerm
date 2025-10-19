@@ -101,6 +101,11 @@ public sealed class TerminalInputLine : View {
                     e.Handled = true;
                 }
 
+                if (_history.Count() is 0) {
+                    e.Handled = true;
+                    return;
+                }
+
                 if (_history_index > _history.Count - 1) {
                     Input.Text = _history.Last();
                     _history_index = _history.Count - 1;
