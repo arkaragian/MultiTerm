@@ -3,7 +3,6 @@ using libCommunication;
 using libCommunication.Configuration;
 using libCommunication.Foundation;
 using libCommunication.interfaces;
-using System.Text;
 using Terminal.Gui;
 using libCommunication.Serial;
 using libMultiTerm;
@@ -255,7 +254,7 @@ public sealed class TerminalPanel : View {
         _read_thread.Stop();
     }
 
-    public void Dispose() {
+    public new void Dispose() {
         if (_disposed) {
             return;
         }
@@ -266,6 +265,7 @@ public sealed class TerminalPanel : View {
         _terminalLoop.Join();
         _cts.Dispose();
         View.Dispose();
+        base.Dispose();
     }
 
 }

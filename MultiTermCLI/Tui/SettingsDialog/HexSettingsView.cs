@@ -17,7 +17,12 @@ public class HexSettingsView : View {
     /// <summary>
     /// Selects between the available hex formats
     /// </summary>
-    public RadioGroup Seperators { get; private set; }
+    /// <remarks>
+    ///     This is initialized in a function but the compiler cannot make
+    ///     sense of it.
+    /// </remarks>
+    public RadioGroup Seperators { get; private set; } = null!;
+
     public HexSettings Settings { get; set; }
 
     public HexSettingsView(HexSettings inputSettings) {
