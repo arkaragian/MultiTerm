@@ -46,7 +46,7 @@ public class Program {
 
 
         Application.Init();                         // set raw mode, alt screen, colors
-        Application.Navigation.AdvanceFocus(NavigationDirection.Forward, TabBehavior.TabStop);
+        Application.Navigation?.AdvanceFocus(NavigationDirection.Forward, TabBehavior.TabStop);
         // optional: make Ctrl+C quit
         Console.TreatControlCAsInput = false;
         Application.QuitKey = Key.C.WithCtrl;   // maps to Command.Quit

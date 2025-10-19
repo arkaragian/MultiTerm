@@ -81,6 +81,7 @@ public sealed class TerminalPanel : View {
                 Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),      // Text = white, background = black
                 Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),       // Same text colors when focused
             },
+            CanFocus = true,
             TabStop = TabBehavior.TabStop
         };
 
@@ -181,19 +182,11 @@ public sealed class TerminalPanel : View {
                     Exception? ex = _plugin_loader.LoadPlugin(opendlg.FilePaths[0]);
 
                     if (ex is not null) {
-                        return;
                         _ = MessageBox.ErrorQuery("Error", $"No Plugin Loaded: {ex.Message}", buttons: ["OK"]);
                         e.Handled = true;
                         return;
                     }
 
-                    // foreach (var b in a) {
-                    //     Application.Invoke(() => {
-                    //         View.Text += $"Plugin {b.Key}";
-                    //         View.MoveEnd(); // optional: scrolls to bottom
-                    //     });
-                    // }
-                    // _pluginFunctions = a;
                 }
 
                 e.Handled = true;
@@ -214,11 +207,7 @@ public sealed class TerminalPanel : View {
                     string str = Payload.RenderPayload(psld.SelectedPayload, _settings.HexInputSettings);
 
                     Application.Invoke(() => {
-                        if (str is "") {
-                            _input.Input.Text = "No String Produced";
-                        } else {
-                            _input.Input.Text = str;
-                        }
+                        _input.Input.Text = str;
                     });
                 }
                 e.Handled = true;
@@ -246,14 +235,16 @@ public sealed class TerminalPanel : View {
                 (byte[] payload, _) = sink.Take(ct);
                 string text;
                 if (_input.DisplayHex) {
+                    Console.WriteLine("Rendering Hex");
                     text = Payload.RenderPayload(payload, _settings.HexDisplaySettings!);
                 } else {
-                    //TODO: Escape CR LF here
-                    text = Encoding.ASCII.GetString(payload);
+                    Console.WriteLine("Rendering String");
+                    text = Payload.RenderStringPayload(payload);
                 }
 
                 Application.Invoke(() => {
                     View.Text += text;
+                    View.Text += "\n";
                     View.MoveEnd(); // optional: scrolls to bottom
                 });
             } catch (OperationCanceledException) {
@@ -262,10 +253,6 @@ public sealed class TerminalPanel : View {
 
         }
         _read_thread.Stop();
-    }
-
-    public void FocusInput() {
-        Application.Invoke(() => _input.Input.SetFocus());
     }
 
     public void Dispose() {

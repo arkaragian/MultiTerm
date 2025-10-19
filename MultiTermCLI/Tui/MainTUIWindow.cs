@@ -27,7 +27,6 @@ public class MainTUIWindow : Window {
         (int rows, int cols, bool threeLayout) = DecideLayout(count);
 
         int index = 0;
-        TerminalPanel? firstPanel = null;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols && index < count; c++, index++) {
                 TerminalConfiguration t = settings.Terminals[index];
@@ -38,9 +37,9 @@ public class MainTUIWindow : Window {
                     Y = r == 0 ? 0 : Pos.Percent(50),
                     Width = cols == 1 ? Dim.Fill() : Dim.Percent(50),
                     Height = rows == 1 ? Dim.Fill() : Dim.Percent(50),
-                    TabStop = TabBehavior.TabGroup,
-                    //TabStop = TabBehavior.TabStop,
                     CanFocus = true,
+                    //TabStop = TabBehavior.TabStop,
+                    TabStop = TabBehavior.TabGroup,
                     ColorScheme = ColorScheme
                 };
 
@@ -48,15 +47,8 @@ public class MainTUIWindow : Window {
                 _ = Add(panel);
 
                 _terminals.Add(t.Title, panel);
-
-                if(firstPanel is null) {
-                    firstPanel = panel;
-                }
             }
         }
-        firstPanel?.FocusInput();
-
-
     }
 
 

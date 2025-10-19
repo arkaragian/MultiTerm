@@ -27,39 +27,44 @@ public class PayloadSelectionDialog : Dialog {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(margin: 3),
+            //Height = Dim.Fill(margin: 3),
+            Height = Dim.Fill(),
             BorderStyle = LineStyle.Single,
+            TabStop = TabBehavior.TabStop
         };
 
         lv.SetSource<string>(samples);
 
-        FrameView fv = new() {
-            Title = "Search",
-            BorderStyle = LineStyle.Single,
-            X = 0,
-            Y = Pos.Bottom(lv),
-            Width = Dim.Fill(),
-            Height = 3
-        };
+        // FrameView fv = new() {
+        //     Title = "Search",
+        //     BorderStyle = LineStyle.Single,
+        //     X = 0,
+        //     Y = Pos.Bottom(lv),
+        //     Width = Dim.Fill(),
+        //     Height = 3,
+        //     CanFocus = true,
+        //     TabStop = TabBehavior.None
+        // };
 
-        TextField tf = new() {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-        };
-
-
-        fv.Add(tf);
+        // TextField tf = new() {
+        //     X = 0,
+        //     Y = 0,
+        //     Width = Dim.Fill(),
+        //     CanFocus = true,
+        //     TabStop = TabBehavior.TabStop
+        // };
+        //
+        //
+        // fv.Add(tf);
 
         Add(lv);
-        Add(fv);
+        // Add(fv);
 
         KeyDown += (sender, e) => {
             if (e == Key.Esc) {
                 Application.RequestStop(this);
                 e.Handled = true;
             }
-
         };
 
         lv.KeyDown += (object? sender, Key e) => {
@@ -67,12 +72,20 @@ public class PayloadSelectionDialog : Dialog {
                 int sel  = lv.SelectedItem;
                 byte[] pl = Payloads[sel].Payload;
                 SelectedPayload = pl;
-                //string[] chosen = lv.Source.ToList().Cast<string>().Where((o, idx) => lv.Source.IsMarked(idx)).ToArray();
-                //MessageBox.Query("Chosen", "You chose " + string.Join(",", chosen), "Ok");
                 Application.RequestStop(this);
                 e.Handled = true;
             }
         };
+
+        // tf.KeyDown += (object? sender, Key e) => {
+        //     if (e == Key.Enter) {
+        //         int sel  = lv.SelectedItem;
+        //         byte[] pl = Payloads[sel].Payload;
+        //         SelectedPayload = pl;
+        //         Application.RequestStop(this);
+        //         e.Handled = true;
+        //     }
+        // };
     }
 
 }

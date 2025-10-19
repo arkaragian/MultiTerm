@@ -10,12 +10,18 @@ namespace libMultiTerm.Plugin;
 
 public class PluginLoader {
 
-    public List<UserDefinedPayload>? Payloads {get; private set;}
+    public List<UserDefinedPayload>? Payloads { get; private set; }
 
     public Exception? LoadPlugin(string path) {
         string full = Path.GetFullPath(path);
         AssemblyLoadContext ctx = new AssemblyLoadContext("MutiTermPlugin", isCollectible: false);
-        Assembly assy = ctx.LoadFromAssemblyPath(full);
+        //Assembly assy = ctx.LoadFromAssemblyPath(full);
+        Assembly assy;
+        try {
+            assy = ctx.LoadFromAssemblyPath(full);
+        } catch (Exception ex) {
+            return ex;
+        }
 
         Payloads = new List<UserDefinedPayload>();
 
@@ -33,7 +39,7 @@ public class PluginLoader {
             MethodInfo[] methods = t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
 
             foreach (MethodInfo m in methods) {
-                bool hasAttribute = m.IsDefined(attributeType:typeof( DeviceCommandAttribute), inherit: false);
+                bool hasAttribute = m.IsDefined(attributeType: typeof(DeviceCommandAttribute), inherit: false);
                 if (!hasAttribute) {
                     continue;
                 }

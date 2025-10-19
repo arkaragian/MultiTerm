@@ -58,6 +58,35 @@ public static class Payload {
         return sb.ToString();
     }
 
+    public static string RenderStringPayload(byte[]? payload) {
+        if (payload is null) {
+            return string.Empty;
+        }
+
+        if (payload.Length is 0) {
+            return string.Empty;
+        }
+
+        StringBuilder sb = new();
+
+        foreach (byte b in payload) {
+            if(b is 13) {
+                sb.Append("\\r");
+                continue;
+            }
+
+            if(b is 10) {
+                sb.Append("\\n");
+                continue;
+            }
+
+            sb.Append((char)b);
+        }
+
+
+        return sb.ToString();
+    }
+
     public static byte[]? BuildPayload(string? input, bool asHex, HexSettings settings, bool sendCR, bool sendLF) {
 
         if (input is null) {
@@ -114,10 +143,10 @@ public static class Payload {
         } else {
 
             if (sendCR) {
-                input += (byte)'\r';
+                input += '\r';
             }
             if (sendLF) {
-                input += (byte)'\n';
+                input += '\n';
             }
 
             return Encoding.ASCII.GetBytes(input);

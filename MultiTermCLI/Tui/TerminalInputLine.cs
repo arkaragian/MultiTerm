@@ -15,13 +15,15 @@ public sealed class TerminalInputLine : View {
 
     public HexSettings InputSettings { get; set; }
 
-    private List<string> _history;
-    int _history_index = -1;
+    private HistoryProvider<string> _history_provider;
+    // private List<string> _history;
+    // int _history_index = -1;
 
     public TerminalInputLine(HexSettings settings) {
         InputSettings = settings;
 
-        _history = new();
+        _history_provider = new();
+        //_history = new();
 
         X = 0;
         Y = 0;
@@ -76,53 +78,31 @@ public sealed class TerminalInputLine : View {
 
         Input.KeyDown += (object? sender, Key e) => {
             if (e == Key.CursorUp) {
-
-                if (_history_index < 0) {
-                    _history_index = 0;
+                string? r = _history_provider.Back();
+                if(r is not null) {
+                    Input.Text = r;
                 }
-
-                if (_history.Count is 0) {
-                    e.Handled = true;
-                    return;
-                }
-
-                Input.Text = _history[_history_index];
-                //We decrement the index after providing the completion
-                _history_index--;
 
                 e.Handled = true;
                 return;
             }
 
             if (e == Key.CursorDown) {
-                _history_index--;
-                if (_history_index < 0) {
-                    _history_index = 0;
-                    e.Handled = true;
-                }
 
-                if (_history.Count() is 0) {
-                    e.Handled = true;
-                    return;
-                }
-
-                if (_history_index > _history.Count - 1) {
-                    Input.Text = _history.Last();
-                    _history_index = _history.Count - 1;
-                } else {
-                    Input.Text = _history[_history_index];
+                string? r = _history_provider.Next();
+                if(r is not null) {
+                    Input.Text = r;
                 }
 
                 e.Handled = true;
                 return;
-
             }
         };
     }
 
     public byte[]? BuildPayload() {
 
-        string? s = Input.Text?.ToString();
+        string? s = Input.Text;//?.ToString();
         if (s is null) {
             return null;
         }
@@ -131,23 +111,16 @@ public sealed class TerminalInputLine : View {
             return null;
         }
 
-        if (_history.Count is 0) {
-            _history.Add(s);
-            _history_index++;
-        } else {
-            string prev = _history.Last();
-            bool areDifferent = !s.Equals(prev, StringComparison.Ordinal);
-
-            if (areDifferent) {
-                _history.Add(s);
-                _history_index++;
-            }
-        }
+        _history_provider.AddItem(s);
 
         bool asHex = _sendHEX.CheckedState is CheckState.Checked;
         bool sendCR = _sendCR.CheckedState is CheckState.Checked;
         bool sendLF = _sendLF.CheckedState is CheckState.Checked;
-        byte[] result = Payload.BuildPayload(s, asHex, InputSettings, sendCR, sendLF);
+        byte[]? result = Payload.BuildPayload(s, asHex, InputSettings, sendCR, sendLF);
+
+        if(result is null) {
+            return null;
+        }
 
         Input.Text = "";
 
