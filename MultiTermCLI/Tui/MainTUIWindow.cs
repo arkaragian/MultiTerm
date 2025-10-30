@@ -16,7 +16,7 @@ public class MainTUIWindow : Window {
 
         ColorScheme = new ColorScheme {
             Normal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
-            Focus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
+            Focus = new Terminal.Gui.Attribute(Color.White, Color.Black),
             HotNormal = new Terminal.Gui.Attribute(Color.Green, Color.Black),
             HotFocus = new Terminal.Gui.Attribute(Color.BrightGreen, Color.Black),
             Disabled = new Terminal.Gui.Attribute(Color.Green, Color.Gray)

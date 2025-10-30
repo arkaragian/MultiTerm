@@ -30,7 +30,9 @@ public class Program {
         string contents = File.ReadAllText(f);
 
         JsonSerializerOptions options = new() {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+
         };
         options.Converters.Add(new JsonStringEnumConverter());
 
@@ -46,11 +48,10 @@ public class Program {
 
 
         Application.Init();                         // set raw mode, alt screen, colors
-        Application.Navigation?.AdvanceFocus(NavigationDirection.Forward, TabBehavior.TabStop);
         // optional: make Ctrl+C quit
-        Console.TreatControlCAsInput = false;
-        Application.QuitKey = Key.C.WithCtrl;   // maps to Command.Quit
-                                                // or also wire SIGINT:
+        // Console.TreatControlCAsInput = false;
+         Application.QuitKey = Key.Q.WithCtrl;   // maps to Command.Quit
+        //                                         // or also wire SIGINT:
 
 
         Toplevel top = new();
@@ -59,18 +60,8 @@ public class Program {
             Application.RequestStop(top);
         };
 
-        // Window w = new Terminal.Gui.Window { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
-        // w.Add(new Label() { X = 2, Y = 1, Title = "Hello From Terminal" });
-        // top.Add(w);
 
-
-        // MultiTermMenu mn = new();
-        //
-        // _ = top.Add(mn);
-
-        MainTUIWindow win = new MainTUIWindow(settings) {
-            //Y = Pos.Bottom(mn)
-        };
+        MainTUIWindow win = new(settings);
 
         _ = top.Add(win);
 

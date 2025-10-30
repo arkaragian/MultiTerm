@@ -66,7 +66,8 @@ public sealed class TerminalPanel : View {
             Height = Dim.Fill(margin: _input_height),
             ReadOnly = true,
             BorderStyle = LineStyle.Single,
-            CanFocus = false,
+            //CanFocus = false,
+            CanFocus = true,
         };
 
         _input = new TerminalInputLine(_settings.HexInputSettings) {
@@ -133,6 +134,7 @@ public sealed class TerminalPanel : View {
 
         _input.KeyDown += (object? sender, Key e) => {
             if (e == Key.Enter) {
+                string s = _input.Input.Text;
                 byte[]? text = _input.BuildPayload();
 
                 if (text is null) {
@@ -141,14 +143,24 @@ public sealed class TerminalPanel : View {
                     return;
                 }
 
+
+                Application.Invoke(() => {
+                    View.Text += "[OUT] <= ";
+                    View.Text += s;
+                    View.Text += "\n";
+                    View.MoveEnd(); // optional: scrolls to bottom
+                });
+
                 // handle the completed input here
                 _input.Text = "";
+
 
                 libCommunication.Command cmd = new(text, LayerCommand.None, null);
                 _write_thread.Addtoqueue(cmd, handle: null, CancellationToken.None);
 
                 // optional: suppress default behavior
                 e.Handled = true;
+
             }
         };
 
@@ -240,6 +252,7 @@ public sealed class TerminalPanel : View {
                 }
 
                 Application.Invoke(() => {
+                    View.Text += "[IN] => ";
                     View.Text += text;
                     View.Text += "\n";
                     View.MoveEnd(); // optional: scrolls to bottom

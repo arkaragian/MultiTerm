@@ -15,7 +15,7 @@ public sealed class TerminalInputLine : View {
     private readonly RadioGroup _displayStyle;
 
     //public bool DisplayHex => _displayHex.CheckedState == CheckState.Checked;
-    public bool SendHex    => _sendStyle.SelectedItem is 0;
+    public bool SendHex => _sendStyle.SelectedItem is 0;
     public bool SendText => _sendStyle.SelectedItem is 1;
 
     public bool DisplayHex => _displayStyle.SelectedItem is 0;
@@ -111,7 +111,7 @@ public sealed class TerminalInputLine : View {
         Input.KeyDown += (object? sender, Key e) => {
             if (e == Key.CursorUp) {
                 string? r = _history_provider.Back();
-                if(r is not null) {
+                if (r is not null) {
                     Input.Text = r;
                 }
 
@@ -122,7 +122,7 @@ public sealed class TerminalInputLine : View {
             if (e == Key.CursorDown) {
 
                 string? r = _history_provider.Next();
-                if(r is not null) {
+                if (r is not null) {
                     Input.Text = r;
                 }
 
@@ -132,6 +132,10 @@ public sealed class TerminalInputLine : View {
         };
     }
 
+    /// <summary>
+    /// Generates the payload bytes that need to sent over the line. During generation
+    /// the input field will be cleared.
+    /// </summary>
     public byte[]? BuildPayload() {
 
         string? s = Input.Text;//?.ToString();
@@ -150,7 +154,7 @@ public sealed class TerminalInputLine : View {
         bool sendLF = _sendLF.CheckedState is CheckState.Checked;
         byte[]? result = Payload.BuildPayload(s, SendHex, InputSettings, sendCR, sendLF);
 
-        if(result is null) {
+        if (result is null) {
             return null;
         }
 
