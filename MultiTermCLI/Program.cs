@@ -32,7 +32,7 @@ public class Program {
         JsonSerializerOptions options = new() {
             PropertyNameCaseInsensitive = true,
             AllowTrailingCommas = true,
-
+            ReadCommentHandling = JsonCommentHandling.Skip
         };
         options.Converters.Add(new JsonStringEnumConverter());
 
