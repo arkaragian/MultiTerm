@@ -91,7 +91,18 @@ public sealed class TerminalPanel : View {
         Serial? port = null;
         CommTCPClient? client = null;
         if (_settings.ConnectionType is ConnectionType.Network) {
-            client = new CommTCPClient(_settings.NetworkConnectionSettings!.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
+
+            if(_settings.NetworkConnectionSettings is null) {
+                throw new InvalidOperationException("No Network connection settings!");
+            }
+
+            if(_settings.NetworkConnectionSettings.TransmissionProtocol is NetTransmissionProtocol.TCP) {
+                client = new CommTCPClient(_settings.NetworkConnectionSettings.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
+            }
+
+            if(_settings.NetworkConnectionSettings.TransmissionProtocol is NetTransmissionProtocol.UDP) {
+                client = new CommUDPClient(_settings.NetworkConnectionSettings.RemoteAddress, _settings.NetworkConnectionSettings.RemotePort);
+            }
         } else {
             port = new(_settings.SerialPortSettings!.PortName, _settings.SerialPortSettings.BaudRate, _settings.SerialPortSettings.Parity, _settings.SerialPortSettings.DataBits, _settings.SerialPortSettings.StopBits) {
                 ReadTimeout = 200
@@ -120,7 +131,16 @@ public sealed class TerminalPanel : View {
 
 
         if (_settings.ConnectionType is ConnectionType.Network) {
-            _write_thread = new TCPWriteThread("TCPThread", client!, desc);
+            if(_settings.NetworkConnectionSettings is null) {
+                throw new InvalidOperationException("No Network connection settings!");
+            }
+            if(_settings.NetworkConnectionSettings.TransmissionProtocol is NetTransmissionProtocol.TCP) {
+                _write_thread = new TCPWriteThread("TCPThread", client!, desc);
+            }
+
+            if(_settings.NetworkConnectionSettings.TransmissionProtocol is NetTransmissionProtocol.UDP) {
+                _write_thread = new UDPWriteThread("UDPThread", client!, desc);
+            }
         } else {
             _write_thread = new SerialWriteThread(_settings.Title, port!, desc);
         }
